@@ -39,7 +39,11 @@ export function LoveForm() {
           태어난 시간
         </label>
         <BirthTimeSelect id="btime" value={time} onChange={setTime} />
-        <p className="m-0 -mt-1 text-xs text-ink-sub">시간을 모르면 &lsquo;모름&rsquo;으로 두세요</p>
+        <p className="m-0 -mt-1 text-xs text-ink-sub">
+          {time === ""
+            ? "시간을 모르면 사주가 6글자(3기둥)로 풀이돼요. 알면 더 자세히 볼 수 있어요"
+            : "시간까지 넣으면 사주 8글자(4기둥)로 풀이해요"}
+        </p>
         <span className={labelCls}>성별</span>
         <Segmented label="성별" options={genders} value={gender} onChange={setGender} />
       </div>
