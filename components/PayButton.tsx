@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LoginSheet } from "@/components/LoginSheet";
-import { saveOrderDraft, type OrderDraft } from "@/lib/order-draft";
+import { isDraftReady, saveOrderDraft, type OrderDraft } from "@/lib/order-draft";
 import type { Product } from "@/lib/products";
 import { useSession } from "@/lib/session";
 
@@ -14,6 +14,10 @@ export function PayButton({ label, product, draft }: { label: string; product: P
   const { session, ready } = useSession();
 
   function onClick() {
+    if (draft && !isDraftReady(draft)) {
+      alert("생년월일을 정확히 입력해 주세요.");
+      return;
+    }
     if (ready && session) {
       if (draft) saveOrderDraft(draft);
       router.push("/payment");

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { isDraftReady, type OrderDraft } from "@/lib/order-draft";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -9,10 +10,14 @@ export async function POST(request: Request) {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: "로그인이 필요해요." }, { status: 401 });
 
-  const body = (await request.json().catch(() => null)) as { input?: { product?: string } } | null;
+  const body = (await request.json().catch(() => null)) as { input?: OrderDraft } | null;
   const code = body?.input?.product;
   if (code !== "compat" && code !== "love") {
     return NextResponse.json({ error: "입력 정보가 올바르지 않아요." }, { status: 400 });
+  }
+
+  if (!isDraftReady(body!.input!)) {
+    return NextResponse.json({ error: "생년월일을 정확히 입력해 주세요." }, { status: 400 });
   }
 
   const admin = createAdminClient();

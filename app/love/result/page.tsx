@@ -37,8 +37,8 @@ function Notice({ children }: { children: React.ReactNode }) {
 }
 
 /** 결제가 끝난 본인의 주문인지 확인하고, 입력값으로 사주 원국을 계산해 readings.saju에 저장한다. */
-async function loadSaju(orderId: string | undefined): Promise<Saju | null> {
-  if (!orderId) return null;
+async function loadSaju(orderId: string | undefined): Promise<Saju | "not-found" | "no-birth"> {
+  if (!orderId) return "not-found";
   const supabase = await createClient();
   const { data: order } = await supabase
     .from("orders")
@@ -46,14 +46,14 @@ async function loadSaju(orderId: string | undefined): Promise<Saju | null> {
     .eq("id", orderId)
     .maybeSingle(); // RLS: 본인 주문만 조회된다
   if (!order || order.status !== "DONE" || order.product_code !== "love")
-    return null;
+    return "not-found";
 
   const input = order.input as {
     birth?: string;
     calendar?: string;
     time?: string;
   };
-  if (!input.birth || checkBirthDate(input.birth) !== "ok") return null;
+  if (!input.birth || checkBirthDate(input.birth) !== "ok") return "no-birth";
   const saju = calcSaju({
     birth: input.birth,
     calendar: input.calendar ?? "양력",
@@ -93,7 +93,8 @@ async function LoveResultBody({
   await connection();
   const { order } = await searchParams;
   const saju = await loadSaju(order);
-  if (!saju) return <Notice>결제한 풀이를 찾지 못했어요.</Notice>;
+  if (saju === "not-found") return <Notice>결제한 풀이를 찾지 못했어요.</Notice>;
+  if (saju === "no-birth") return <Notice>생년월일 정보가 없는 주문이라 사주를 계산할 수 없어요.</Notice>;
 
   return (
     <main className="flex flex-1 flex-col gap-3.5 px-[18px] pb-8 pt-2">

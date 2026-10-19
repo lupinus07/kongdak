@@ -1,3 +1,4 @@
+import { checkBirthDate } from "./birth";
 import type { Product } from "./products";
 
 /** 로그인·결제를 거쳐 돌아와도 입력이 이어지도록 브라우저에 잠깐 보관하는 입력값 */
@@ -14,6 +15,12 @@ export type LoveDraft = {
   gender: string;
 };
 export type OrderDraft = CompatDraft | LoveDraft;
+
+/** 결제 전에 생년월일이 모두 제대로 입력됐는지 본다. 풀이 계산에 꼭 필요하다. */
+export function isDraftReady(d: OrderDraft): boolean {
+  const births = d.product === "compat" ? [d.me.birth, d.you.birth] : [d.birth];
+  return births.every((b) => checkBirthDate(b) === "ok");
+}
 
 const KEY = "kongdak:order-draft";
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
