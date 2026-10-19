@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { loadTossPayments, type TossPaymentsWidgets } from "@tosspayments/tosspayments-sdk";
 import { BackHeader } from "@/components/BackHeader";
 import { BenefitBox } from "@/components/form";
 import { loadOrderDraft, type OrderDraft } from "@/lib/order-draft";
 import { PRODUCTS } from "@/lib/products";
+import { createClient } from "@/lib/supabase/client";
 
 function summaryOf(d: OrderDraft) {
   if (d.product === "compat") {
@@ -20,6 +22,8 @@ export function PaymentClient() {
   // undefined: 아직 읽는 중, null: 보관된 입력 없음
   const [draft, setDraft] = useState<OrderDraft | null | undefined>(undefined);
   const [agreed, setAgreed] = useState(true);
+  const [paying, setPaying] = useState(false);
+  const widgetsRef = useRef<TossPaymentsWidgets | null>(null);
 
   useEffect(() => {
     // localStorage는 브라우저에서만 읽을 수 있어서 마운트 뒤에 불러온다
@@ -28,6 +32,55 @@ export function PaymentClient() {
   }, []);
 
   const product = draft ? PRODUCTS[draft.product] : null;
+  const productCode = draft?.product;
+
+  // 결제위젯은 화면에 보이는 금액(표시용)으로 그리고, 실제 결제 금액은 주문 생성 때 서버 값으로 다시 정한다.
+  useEffect(() => {
+    if (!productCode) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await createClient().auth.getUser();
+      const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY;
+      if (!data.user || !clientKey || cancelled) return;
+      const toss = await loadTossPayments(clientKey);
+      const widgets = toss.widgets({ customerKey: data.user.id });
+      await widgets.setAmount({ currency: "KRW", value: PRODUCTS[productCode].price });
+      await Promise.all([
+        widgets.renderPaymentMethods({ selector: "#payment-method", variantKey: "DEFAULT" }),
+        widgets.renderAgreement({ selector: "#agreement", variantKey: "AGREEMENT" }),
+      ]);
+      if (!cancelled) widgetsRef.current = widgets;
+    })().catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [productCode]);
+
+  async function onPay() {
+    const widgets = widgetsRef.current;
+    if (!draft || !widgets || paying) return;
+    setPaying(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: draft }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      const order = (await res.json()) as { orderId: string; orderName: string; amount: number };
+      await widgets.setAmount({ currency: "KRW", value: order.amount });
+      await widgets.requestPayment({
+        orderId: order.orderId,
+        orderName: order.orderName,
+        successUrl: `${window.location.origin}/payment/success`,
+        failUrl: `${window.location.origin}/payment/fail`,
+      });
+    } catch (e) {
+      // 결제창을 직접 닫은 경우도 여기로 온다
+      alert(e instanceof Error && e.message ? e.message : "결제를 시작하지 못했어요. 다시 시도해 주세요.");
+      setPaying(false);
+    }
+  }
 
   return (
     <>
@@ -76,10 +129,8 @@ export function PaymentClient() {
 
             <section className="flex flex-col gap-3 rounded-[26px] bg-white p-[18px]">
               <span className="font-title text-base">결제 수단</span>
-              <div className="flex h-[150px] flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-[#F3B6CB] bg-[#FFF8FA] text-center">
-                <span className="text-sm text-[#A61E4D]">[토스페이먼츠 결제위젯 영역]</span>
-                <span className="text-xs text-[#8C6A78]">토스페이 · 카드 · 간편결제가 여기에 표시돼요</span>
-              </div>
+              <div id="payment-method" />
+              <div id="agreement" />
             </section>
 
             <div className="flex items-baseline justify-between px-1">
@@ -101,22 +152,14 @@ export function PaymentClient() {
             />
             주문 내용을 확인했으며 결제에 동의해요
           </label>
-          {agreed ? (
-            <Link
-              href={product.resultHref}
-              className="flex h-[58px] items-center justify-center rounded-[29px] bg-brand font-title text-[19px] text-white no-underline shadow-[0_10px_22px_rgba(194,37,92,0.28)]"
-            >
-              {PAY_LABEL[draft.product]}
-            </Link>
-          ) : (
-            <button
-              type="button"
-              disabled
-              className="flex h-[58px] items-center justify-center rounded-[29px] bg-[#E3AFC2] font-title text-[19px] text-white"
-            >
-              {PAY_LABEL[draft.product]}
-            </button>
-          )}
+          <button
+            type="button"
+            disabled={!agreed || paying}
+            onClick={onPay}
+            className="flex h-[58px] items-center justify-center rounded-[29px] bg-brand font-title text-[19px] text-white shadow-[0_10px_22px_rgba(194,37,92,0.28)] disabled:bg-[#E3AFC2] disabled:shadow-none"
+          >
+            {PAY_LABEL[draft.product]}
+          </button>
         </footer>
       )}
     </>

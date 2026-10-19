@@ -42,3 +42,14 @@ export function Li({ children, dot = "#FF6B9A" }: { children: ReactNode; dot?: s
 export function Disclaimer({ children }: { children: ReactNode }) {
   return <p className="m-0 text-center text-[11.5px] leading-relaxed text-[#8C6A78]">{children}</p>;
 }
+
+/** 풀이 본문이 들어올 자리를 보여주는 회색 줄. AI 풀이를 붙이기 전까지 레이아웃 확인용으로 쓴다. */
+export function Skeleton({ lines = 3, tone = "#F6DCE5" }: { lines?: number; tone?: string }) {
+  return (
+    <div className="flex flex-col gap-2" aria-hidden="true">
+      {Array.from({ length: lines }, (_, i) => (
+        <div key={i} className="h-3.5 rounded-md" style={{ background: tone, width: i === lines - 1 ? "62%" : "100%" }} />
+      ))}
+    </div>
+  );
+}
