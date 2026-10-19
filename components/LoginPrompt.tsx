@@ -1,6 +1,6 @@
 "use client";
 
-import { devLogin } from "@/lib/session";
+import { loginWithKakao } from "@/lib/session";
 
 /** 비로그인 상태에서 보여주는 로그인 안내 카드 (메뉴, 마이페이지 공용) */
 export function LoginPrompt({ onDone }: { onDone?: () => void }) {
@@ -20,9 +20,8 @@ export function LoginPrompt({ onDone }: { onDone?: () => void }) {
       <button
         type="button"
         onClick={() => {
-          // TODO: Supabase Auth 카카오 로그인으로 교체
-          devLogin();
           onDone?.();
+          loginWithKakao(window.location.pathname + window.location.search);
         }}
         className="flex h-14 w-full items-center justify-center gap-2 rounded-[14px] bg-[#FEE500] text-[17px] font-bold text-black/85"
       >

@@ -1,72 +1,45 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
-
-/**
- * 임시 로그인 상태. 아직 Supabase Auth(카카오)가 연결되지 않아서
- * 브라우저 localStorage에 "로그인한 척"하는 값만 둔다. 화면 확인용이다.
- * TODO: Supabase Auth 세션(getUser / onAuthStateChange)으로 교체하고 이 파일은 지운다.
- */
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export type Session = { nickname: string };
 
-const KEY = "kongdak:dev-session";
-const EVENT = "kongdak:session-change";
-
-function subscribe(cb: () => void) {
-  window.addEventListener(EVENT, cb);
-  window.addEventListener("storage", cb);
-  return () => {
-    window.removeEventListener(EVENT, cb);
-    window.removeEventListener("storage", cb);
-  };
+/** 카카오 로그인 화면으로 이동한다. 끝나면 /auth/callback을 거쳐 next 경로로 돌아온다. */
+export async function loginWithKakao(next = "/") {
+  const supabase = createClient();
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "kakao",
+    options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
+  });
+  if (error) alert("로그인을 시작하지 못했어요. 잠시 후 다시 해주세요.");
 }
 
-function readRaw(): string {
-  try {
-    return localStorage.getItem(KEY) ?? "";
-  } catch {
-    return "";
-  }
+export async function logout() {
+  await createClient().auth.signOut();
 }
 
-function emit() {
-  window.dispatchEvent(new Event(EVENT));
-}
-
-export function devLogin() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify({ nickname: "콩닥이" } satisfies Session));
-  } catch {
-    // 저장소를 못 쓰면 로그인 상태를 유지할 수 없다
-  }
-  emit();
-}
-
-export function logout() {
-  try {
-    localStorage.removeItem(KEY);
-  } catch {
-    // 무시
-  }
-  emit();
-}
-
-/** ready: 브라우저에서 저장값을 읽은 뒤부터 true (서버 렌더·하이드레이션 중에는 false) */
+/** ready: 세션 확인이 끝난 뒤부터 true */
 export function useSession(): { session: Session | null; ready: boolean } {
-  const raw = useSyncExternalStore(subscribe, readRaw, () => "");
-  const ready = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-  const session = useMemo<Session | null>(() => {
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as Session;
-    } catch {
-      return null;
-    }
-  }, [raw]);
-  return { session, ready };
+  const [state, setState] = useState<{ session: Session | null; ready: boolean }>({
+    session: null,
+    ready: false,
+  });
+
+  useEffect(() => {
+    const supabase = createClient();
+    const toSession = (user: { user_metadata?: Record<string, unknown> } | null | undefined): Session | null => {
+      if (!user) return null;
+      const m = user.user_metadata ?? {};
+      const name = (m.name ?? m.full_name ?? m.nickname ?? m.preferred_username) as string | undefined;
+      return { nickname: name || "콩닥이" };
+    };
+    supabase.auth.getUser().then(({ data }) => setState({ session: toSession(data.user), ready: true }));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) =>
+      setState({ session: toSession(s?.user), ready: true }),
+    );
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  return state;
 }

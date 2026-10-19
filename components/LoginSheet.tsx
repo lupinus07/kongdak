@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { CoupleTitle } from "@/components/icons/Characters";
 import { saveOrderDraft, type OrderDraft } from "@/lib/order-draft";
+import { loginWithKakao } from "@/lib/session";
 import type { Product } from "@/lib/products";
 
 const COPY: Record<Product, { title: string; sub: string }> = {
@@ -27,7 +27,6 @@ export function LoginSheet({
   draft?: OrderDraft;
   onClose: () => void;
 }) {
-  const router = useRouter();
   const copy = COPY[product];
 
   useEffect(() => {
@@ -43,9 +42,8 @@ export function LoginSheet({
 
   function startKakao() {
     // 카카오 로그인(회원가입) 화면으로 나갔다 돌아와도 입력이 남도록 먼저 보관한다.
-    // TODO: Supabase Auth Kakao 로그인 연결 후 redirectTo를 /payment로 지정
     if (draft) saveOrderDraft(draft);
-    router.push("/payment");
+    loginWithKakao("/payment");
   }
 
   return (

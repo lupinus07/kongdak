@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState, type PointerEvent } from "react";
 import { TAROT_TOPICS, TAROT_TOPIC_QUESTIONS, drawRandomCard, parseTopic } from "@/lib/tarot";
 
 const ANGLES = [-24, -16, -8, 0, 8, 16, 24];
@@ -13,6 +13,22 @@ export function DrawClient() {
 
   const [selected, setSelected] = useState<number | null>(null);
   const [shuffleKey, setShuffleKey] = useState(0);
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  // 다른 화면에 다녀와도 이전에 고른 카드가 남지 않도록, 화면이 가려질 때 선택을 비운다.
+  // (페이지 상태가 보존되는 경우에도 effect 정리 함수는 실행된다)
+  useEffect(() => {
+    return () => {
+      setSelected(null);
+      setHovered(null);
+    };
+  }, []);
+
+  // 마우스를 올리거나 손가락을 댄 채 훑으면, 그 아래 카드가 위로 올라온다.
+  function trackPointer(e: PointerEvent<HTMLDivElement>) {
+    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>("[data-card]");
+    setHovered(el ? Number(el.dataset.card) : null);
+  }
 
   function confirm() {
     if (selected === null) return;
@@ -47,10 +63,17 @@ export function DrawClient() {
         key={shuffleKey}
         role="radiogroup"
         aria-label="타로 카드 7장"
+        onPointerDown={trackPointer}
+        onPointerMove={trackPointer}
+        onPointerUp={(e) => e.pointerType !== "mouse" && setHovered(null)}
+        onPointerCancel={() => setHovered(null)}
+        onPointerLeave={() => setHovered(null)}
+        style={{ touchAction: "pan-y" }}
         className={`relative h-[330px] w-[346px] self-center ${shuffleKey > 0 ? "animate-[shuffle_0.5s_ease]" : ""}`}
       >
         {ANGLES.map((angle, i) => {
           const on = selected === i;
+          const lift = on ? -34 : hovered === i ? -22 : 0;
           return (
             <button
               key={angle}
@@ -61,9 +84,11 @@ export function DrawClient() {
               onClick={() => setSelected(i)}
               className="tarot-card"
               data-on={on}
+              data-card={i}
               style={{
-                transform: `rotate(${angle}deg)${on ? " translateY(-34px)" : ""}`,
-                zIndex: on ? 10 : undefined,
+                transform: `rotate(${angle}deg)`,
+                translate: `0 ${lift}px`,
+                zIndex: on ? 10 : hovered === i ? 9 : undefined,
               }}
             >
               {on && (
