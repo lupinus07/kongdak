@@ -3,10 +3,11 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
-import { Chap, Disclaimer, H, Sec, Skeleton } from "@/components/report";
+import { Chap, Disclaimer, H, P, Sec, Skeleton } from "@/components/report";
 import { SajuChart } from "@/components/SajuChart";
 import { checkBirthDate } from "@/lib/birth";
 import { calcSaju, type Saju } from "@/lib/saju";
+import { sajuReading } from "@/lib/saju-reading";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -37,7 +38,9 @@ function Notice({ children }: { children: React.ReactNode }) {
 }
 
 /** 결제가 끝난 본인의 주문인지 확인하고, 입력값으로 사주 원국을 계산해 readings.saju에 저장한다. */
-async function loadSaju(orderId: string | undefined): Promise<Saju | "not-found" | "no-birth"> {
+async function loadSaju(
+  orderId: string | undefined,
+): Promise<{ saju: Saju; situation?: string; gender?: string } | "not-found" | "no-birth"> {
   if (!orderId) return "not-found";
   const supabase = await createClient();
   const { data: order } = await supabase
@@ -52,6 +55,8 @@ async function loadSaju(orderId: string | undefined): Promise<Saju | "not-found"
     birth?: string;
     calendar?: string;
     time?: string;
+    situation?: string;
+    gender?: string;
   };
   if (!input.birth || checkBirthDate(input.birth) !== "ok") return "no-birth";
   const saju = calcSaju({
@@ -66,7 +71,7 @@ async function loadSaju(orderId: string | undefined): Promise<Saju | "not-found"
     .update({ saju })
     .eq("order_id", order.id)
     .is("saju", null);
-  return saju;
+  return { saju, situation: input.situation, gender: input.gender };
 }
 
 export default function LoveResultPage({
@@ -92,9 +97,11 @@ async function LoveResultBody({
   // 결제 후 요청마다 달라지는 화면이라 미리 그리지 않고, 요청 때 처리한다(Date.now() 등 사용 가능).
   await connection();
   const { order } = await searchParams;
-  const saju = await loadSaju(order);
-  if (saju === "not-found") return <Notice>결제한 풀이를 찾지 못했어요.</Notice>;
-  if (saju === "no-birth") return <Notice>생년월일 정보가 없는 주문이라 사주를 계산할 수 없어요.</Notice>;
+  const loaded = await loadSaju(order);
+  if (loaded === "not-found") return <Notice>결제한 풀이를 찾지 못했어요.</Notice>;
+  if (loaded === "no-birth") return <Notice>생년월일 정보가 없는 주문이라 사주를 계산할 수 없어요.</Notice>;
+  const { saju, situation, gender } = loaded;
+  const cards = sajuReading(saju, { situation, gender });
 
   return (
     <main className="flex flex-1 flex-col gap-3.5 px-[18px] pb-8 pt-2">
@@ -117,7 +124,20 @@ async function LoveResultBody({
           <Chap>{c.label}</Chap>
           <H>{c.title}</H>
 
-          {c.pillars && <SajuChart saju={saju} />}
+          {c.pillars && (
+            <>
+              <SajuChart saju={saju} />
+              {cards.map((card) => (
+                <div
+                  key={card.title}
+                  className={`mt-1 flex flex-col gap-1.5 rounded-[18px] p-3.5 ${card.highlight ? "bg-[#FFF0F5]" : "bg-[#FFF8FA]"}`}
+                >
+                  <b className="font-title text-[15px] font-normal text-brand">{card.title}</b>
+                  <P>{card.body}</P>
+                </div>
+              ))}
+            </>
+          )}
 
           {c.split && (
             <div className="grid grid-cols-2 gap-2">
@@ -151,7 +171,7 @@ async function LoveResultBody({
             </div>
           )}
 
-          <Skeleton lines={c.split || c.months ? 2 : 4} />
+          {!c.pillars && <Skeleton lines={c.split || c.months ? 2 : 4} />}
         </Sec>
       ))}
 
