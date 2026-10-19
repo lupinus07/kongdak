@@ -1,0 +1,44 @@
+import type { CSSProperties, ReactNode } from "react";
+
+/** 풀이 결과 화면(샘플·유료 결과)에서 공통으로 쓰는 조각들 */
+
+export function Sec({
+  children,
+  className = "bg-white",
+  style,
+}: {
+  children: ReactNode;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  return (
+    <section className={`flex flex-col gap-2.5 rounded-[26px] px-[18px] py-5 ${className}`} style={style}>
+      {children}
+    </section>
+  );
+}
+
+export function Chap({ children, className = "text-[#A61E4D]" }: { children: ReactNode; className?: string }) {
+  return <span className={`text-xs tracking-[0.5px] ${className}`}>{children}</span>;
+}
+
+export function H({ children, className = "text-ink" }: { children: ReactNode; className?: string }) {
+  return <h2 className={`m-0 font-title text-[21px] font-normal leading-[1.35] ${className}`}>{children}</h2>;
+}
+
+export function P({ children, className = "text-[#5E3F4C]" }: { children: ReactNode; className?: string }) {
+  return <p className={`m-0 text-[14.5px] leading-[1.75] ${className}`}>{children}</p>;
+}
+
+export function Li({ children, dot = "#FF6B9A" }: { children: ReactNode; dot?: string }) {
+  return (
+    <div className="flex items-start gap-2.5 text-[14.5px] leading-[1.7] text-[#5E3F4C]">
+      <span className="mt-[9px] size-2 shrink-0 rounded-full" style={{ background: dot }} />
+      <span>{children}</span>
+    </div>
+  );
+}
+
+export function Disclaimer({ children }: { children: ReactNode }) {
+  return <p className="m-0 text-center text-[11.5px] leading-relaxed text-[#8C6A78]">{children}</p>;
+}
