@@ -6,6 +6,7 @@ import { BirthDateInput, BirthTimeSelect } from "@/components/BirthFields";
 import { BenefitBox, BottomCta, ChipGroup, labelCls } from "@/components/form";
 import type { OrderDraft } from "@/lib/order-draft";
 import { PRODUCTS } from "@/lib/products";
+import { SajuPreview } from "./SajuPreview";
 
 const situations = ["솔로", "썸", "연애 중", "이별 후"] as const;
 const calendars = ["양력", "음력"] as const;
@@ -47,6 +48,8 @@ export function LoveForm() {
         <span className={labelCls}>성별</span>
         <Segmented label="성별" options={genders} value={gender} onChange={setGender} />
       </div>
+
+      <SajuPreview birth={birth} calendar={calendar} time={time} situation={situation} gender={gender} />
 
       <BottomCta sampleHref="/love/sample" sampleLabel="샘플 풀이 먼저 보기 ›" product="love" draft={draft} payLabel="내 연애운 보기" />
     </>
