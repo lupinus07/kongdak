@@ -7,7 +7,7 @@ export const metadata = { title: "나의 연애운 - 콩닥" };
 
 export default function LovePage() {
   return (
-    <PhoneFrame>
+    <PhoneFrame stickyCta>
       <BackHeader title="나의 연애운" />
       <main className="flex flex-1 flex-col gap-3.5 px-5 pb-6 pt-2">
         <div className="flex items-center justify-between">

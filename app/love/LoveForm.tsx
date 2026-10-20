@@ -1,10 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Segmented } from "@/components/Segmented";
 import { BirthDateInput, BirthTimeSelect } from "@/components/BirthFields";
 import { BenefitBox, BottomCta, ChipGroup, labelCls } from "@/components/form";
-import type { OrderDraft } from "@/lib/order-draft";
+import { isDraftReady, saveOrderDraft, type OrderDraft } from "@/lib/order-draft";
 import { PRODUCTS } from "@/lib/products";
 
 const situations = ["솔로", "썸", "연애 중", "이별 후"] as const;
@@ -12,6 +13,7 @@ const calendars = ["양력", "음력"] as const;
 const genders = ["여자", "남자"] as const;
 
 export function LoveForm() {
+  const router = useRouter();
   const [situation, setSituation] = useState<(typeof situations)[number]>("솔로");
   const [calendar, setCalendar] = useState<(typeof calendars)[number]>("양력");
   const [gender, setGender] = useState<(typeof genders)[number]>("여자");
@@ -19,6 +21,15 @@ export function LoveForm() {
   const [time, setTime] = useState("");
 
   const draft: OrderDraft = { product: "love", situation, calendar, birth, time, gender };
+
+  function onPreview() {
+    if (!isDraftReady(draft)) {
+      alert("생년월일을 정확히 입력해 주세요.");
+      return;
+    }
+    saveOrderDraft(draft);
+    router.push("/love/preview");
+  }
 
   return (
     <>
@@ -48,7 +59,23 @@ export function LoveForm() {
         <Segmented label="성별" options={genders} value={gender} onChange={setGender} />
       </div>
 
-      <BottomCta sampleHref="/love/sample" sampleLabel="샘플 풀이 먼저 보기 ›" product="love" draft={draft} payLabel="내 연애운 보기" />
+      <BottomCta
+        sampleHref="/love/sample"
+        sampleLabel="샘플 풀이 먼저 보기 ›"
+        product="love"
+        draft={draft}
+        payLabel="내 연애운 보기"
+        sticky
+        action={
+          <button
+            type="button"
+            onClick={onPreview}
+            className="flex h-[58px] w-full items-center justify-center rounded-[29px] bg-brand font-title text-[19px] text-white shadow-[0_10px_22px_rgba(194,37,92,0.28)]"
+          >
+            내 연애운 보기
+          </button>
+        }
+      />
     </>
   );
 }
