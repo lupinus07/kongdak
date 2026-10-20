@@ -73,7 +73,7 @@ export function SajuPreview({
   }, [ready, birth, calendar, time]);
 
   if (!ready || !saju) return null;
-  const [first] = sajuReading(saju, { situation, gender });
+  const cards = sajuReading(saju, { situation, gender });
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -84,10 +84,15 @@ export function SajuPreview({
         </div>
         <H>나의 사주 원국</H>
         <SajuChart saju={saju} />
-        <div className="mt-1 flex flex-col gap-1.5 rounded-[18px] bg-[#FFF0F5] p-3.5">
-          <b className="font-title text-[15px] font-normal text-brand">{first.title}</b>
-          <P>{first.body}</P>
-        </div>
+        {cards.map((card) => (
+          <div
+            key={card.title}
+            className={`mt-1 flex flex-col gap-1.5 rounded-[18px] p-3.5 ${card.highlight ? "bg-[#FFF0F5]" : "bg-[#FFF8FA]"}`}
+          >
+            <b className="font-title text-[15px] font-normal text-brand">{card.title}</b>
+            <P>{card.body}</P>
+          </div>
+        ))}
         <p className="m-0 text-xs text-ink-sub">태어난 시간은 표준시 기준으로 계산했어요.</p>
       </Sec>
 

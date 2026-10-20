@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Check } from "@/components/icons/Check";
 import { PayButton } from "@/components/PayButton";
 import type { OrderDraft } from "@/lib/order-draft";
@@ -59,19 +60,29 @@ export function BottomCta({
   product,
   draft,
   payLabel,
+  sticky = false,
+  action,
 }: {
   sampleHref: string;
   sampleLabel: string;
   product: Product;
   draft: OrderDraft;
   payLabel: string;
+  /** 있으면 990원 결제 버튼 대신 이 버튼을 보여 준다 (결제 전 무료 미리보기로 보내는 버튼 등) */
+  action?: ReactNode;
+  /** 스크롤해도 화면 아래에 붙어 있게 한다 */
+  sticky?: boolean;
 }) {
   return (
-    <div className="mt-auto flex flex-col items-center gap-2.5">
+    <div
+      className={`mt-auto flex flex-col items-center gap-2.5 ${
+        sticky ? "sticky bottom-0 z-20 -mx-5 bg-gradient-to-t from-bg from-80% to-transparent px-5 pb-4 pt-5" : ""
+      }`}
+    >
       <Link href={sampleHref} className="p-1 text-sm text-brand">
         {sampleLabel}
       </Link>
-      <PayButton label={payLabel} product={product} draft={draft} />
+      {action ?? <PayButton label={payLabel} product={product} draft={draft} />}
     </div>
   );
 }
