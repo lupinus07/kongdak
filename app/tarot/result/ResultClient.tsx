@@ -3,8 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/report";
 import { TAROT_CARDS } from "@/lib/tarot-cards";
-import { getInterpretation } from "@/lib/tarot-interpretation";
+import { fetchInterpretation, type TarotInterpretation } from "@/lib/tarot-interpretation";
 import { TAROT_TOPICS, parseTopic } from "@/lib/tarot";
 
 const sectionTitle = "font-title text-base text-brand";
@@ -18,6 +20,19 @@ export function ResultClient() {
   const card = cardParam === null ? undefined : TAROT_CARDS[Number(cardParam)];
   const reversed = params.get("rev") === "1";
 
+  // 뽑은 카드가 바뀌면 key도 바뀌어서, 이전 카드의 풀이를 보여주지 않고 다시 불러온다.
+  const key = card ? `${card.id}-${reversed ? 1 : 0}-${topicId}` : "";
+  const [loaded, setLoaded] = useState<{ key: string; r: TarotInterpretation | null } | null>(null);
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    if (!card) return;
+    let alive = true;
+    fetchInterpretation(card.id, reversed, topicId).then((r) => alive && setLoaded({ key, r }));
+    return () => {
+      alive = false;
+    };
+  }, [card, reversed, topicId, key, retry]);
+
   if (!card) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
@@ -29,7 +44,7 @@ export function ResultClient() {
     );
   }
 
-  const r = getInterpretation(card.id, reversed, topicId);
+  const r = loaded?.key === key ? loaded.r : undefined;
 
   return (
     <>
@@ -55,23 +70,35 @@ export function ResultClient() {
               {card.ko} · {card.numeral}
             </span>
           </div>
-          <h1 className="m-0 whitespace-pre-line font-title text-2xl font-normal leading-snug">{r.headline}</h1>
-          <div className="flex flex-wrap gap-1">
-            {r.keywords.map((k) => (
-              <span key={k} className="rounded-xl bg-white px-2.5 py-[5px] text-xs text-[#A61E4D]">
-                #{k}
-              </span>
-            ))}
-          </div>
+          <h1 className="m-0 whitespace-pre-line font-title text-2xl font-normal leading-snug">
+            {r ? r.headline : r === null ? "풀이를 불러오지 못했어요" : "카드를 읽고 있어요…"}
+          </h1>
+          {r === null ? (
+            <button
+              type="button"
+              onClick={() => setRetry((n) => n + 1)}
+              className="self-start rounded-xl bg-white px-3 py-[5px] text-xs text-brand"
+            >
+              다시 불러오기
+            </button>
+          ) : (
+            <div className="flex flex-wrap gap-1">
+              {r?.keywords.map((k) => (
+                <span key={k} className="rounded-xl bg-white px-2.5 py-[5px] text-xs text-[#A61E4D]">
+                  #{k}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       <section className="flex flex-col gap-1.5 rounded-3xl bg-white px-[18px] py-4">
         <span className={sectionTitle}>카드의 의미</span>
-        <p className={bodyText}>{r.meaning}</p>
+        {r ? <p className={bodyText}>{r.meaning}</p> : <Skeleton lines={2} />}
         <div className="my-1 h-px bg-[#F8D4E1]" />
         <span className={sectionTitle}>{topicLabel} 고민에서는</span>
-        <p className={bodyText}>{r.topicReading}</p>
+        {r ? <p className={bodyText}>{r.topicReading}</p> : <Skeleton lines={3} />}
       </section>
 
       <section className="flex items-start gap-3 rounded-3xl bg-[#FFF7D6] px-[18px] py-4">
@@ -80,7 +107,11 @@ export function ResultClient() {
         </svg>
         <div className="flex flex-col gap-1">
           <span className="font-title text-base text-[#8A5A00]">콩닥 한마디</span>
-          <p className="m-0 text-sm leading-relaxed text-[#6B4A2B]">{r.advice}</p>
+          {r ? (
+            <p className="m-0 text-sm leading-relaxed text-[#6B4A2B]">{r.advice}</p>
+          ) : (
+            <Skeleton lines={1} tone="#F3E3A6" />
+          )}
         </div>
       </section>
 

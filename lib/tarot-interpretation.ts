@@ -1,3 +1,4 @@
+import { createClient } from "@/lib/supabase/client";
 import type { TarotTopicId } from "./tarot";
 
 export type TarotInterpretation = {
@@ -8,21 +9,37 @@ export type TarotInterpretation = {
   advice: string;
 };
 
+type Row = {
+  headline: string;
+  message: string;
+  advice: string;
+  tarot_cards: { keywords_up: string[]; keywords_rev: string[]; meaning_up: string; meaning_rev: string } | null;
+};
+
 /**
- * 카드 × 정/역 × 고민 카테고리 풀이 조회.
- * 풀이 780개를 tarot_interpretations 테이블에 넣은 뒤 이 함수를 DB 조회로 바꾼다.
- * 지금은 화면 확인용 임시 문구를 돌려준다.
+ * 카드 × 정/역 × 고민 카테고리 풀이를 tarot_interpretations에서 읽는다 (카드 키워드·기본 의미는 tarot_cards).
+ * 두 테이블 모두 누구나 조회 가능(RLS select 허용)이라 비회원도 브라우저에서 바로 읽는다.
+ * 데이터: design/tarot_seed.sql. 못 찾거나 실패하면 null.
  */
-export function getInterpretation(
-  _card: number,
-  _reversed: boolean,
-  _topic: TarotTopicId,
-): TarotInterpretation {
+export async function fetchInterpretation(
+  card: number,
+  reversed: boolean,
+  topic: TarotTopicId,
+): Promise<TarotInterpretation | null> {
+  const { data, error } = await createClient()
+    .from("tarot_interpretations")
+    .select("headline, message, advice, tarot_cards(keywords_up, keywords_rev, meaning_up, meaning_rev)")
+    .eq("card_id", card)
+    .eq("topic_code", topic)
+    .eq("is_reversed", reversed)
+    .maybeSingle<Row>();
+  if (error || !data?.tarot_cards) return null;
+  const c = data.tarot_cards;
   return {
-    headline: "카드가 건네는\n이야기를 준비 중이에요",
-    keywords: ["사랑", "마음", "흐름"],
-    meaning: "[카드 정/역방향의 기본 의미 — 2문장]",
-    topicReading: "[카테고리별 풀이 — 2~3문장]",
-    advice: "[오늘 해볼 수 있는 작은 행동 조언 — 1~2문장]",
+    headline: data.headline,
+    keywords: reversed ? c.keywords_rev : c.keywords_up,
+    meaning: reversed ? c.meaning_rev : c.meaning_up,
+    topicReading: data.message,
+    advice: data.advice,
   };
 }
