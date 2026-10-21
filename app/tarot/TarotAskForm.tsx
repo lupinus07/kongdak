@@ -22,7 +22,7 @@ const icons: Record<TarotTopicId, React.ReactNode> = {
       <path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" fill="#FF6B9A" />
     </svg>
   ),
-  heart: (
+  their_heart: (
     <svg {...line}>
       <path d="M4 12c2-4 5-6 8-6s6 2 8 6c-2 4-5 6-8 6s-6-2-8-6z" />
       <circle cx="12" cy="12" r="2.5" />
@@ -33,7 +33,7 @@ const icons: Record<TarotTopicId, React.ReactNode> = {
       <path d="M4 17c3 0 4-10 8-10s5 10 8 10" />
     </svg>
   ),
-  reunion: (
+  breakup: (
     <svg {...line}>
       <path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z" />
       <path d="M12 7.4l-1.5 4 3 1.5-1.5 4" />
