@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/report";
 import { TAROT_CARDS } from "@/lib/tarot-cards";
 import { fetchInterpretation, type TarotInterpretation } from "@/lib/tarot-interpretation";
 import { TAROT_TOPICS, parseTopic } from "@/lib/tarot";
+import { getTodayDraw, type DailyDraw } from "@/lib/tarot-daily";
 import { renderTarotImage } from "@/lib/tarot-image";
 
 const sectionTitle = "font-title text-base text-brand";
@@ -15,11 +16,18 @@ const bodyText = "m-0 text-sm leading-relaxed text-[#6B4A58]";
 
 export function ResultClient() {
   const params = useSearchParams();
-  const topicId = parseTopic(params.get("topic"));
+  // 하루 1장: 오늘 뽑은 카드가 있으면 주소의 값보다 그 카드를 우선한다.
+  const [daily, setDaily] = useState<DailyDraw | null>(null);
+  useEffect(() => {
+    // localStorage는 마운트 뒤에만 읽을 수 있다
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDaily(getTodayDraw());
+  }, []);
+  const topicId = daily?.topic ?? parseTopic(params.get("topic"));
   const topicLabel = TAROT_TOPICS.find((t) => t.id === topicId)!.label;
   const cardParam = params.get("card");
-  const card = cardParam === null ? undefined : TAROT_CARDS[Number(cardParam)];
-  const reversed = params.get("rev") === "1";
+  const card = daily ? TAROT_CARDS[daily.card] : cardParam === null ? undefined : TAROT_CARDS[Number(cardParam)];
+  const reversed = daily ? daily.reversed : params.get("rev") === "1";
 
   // 뽑은 카드가 바뀌면 key도 바뀌어서, 이전 카드의 풀이를 보여주지 않고 다시 불러온다.
   const key = card ? `${card.id}-${reversed ? 1 : 0}-${topicId}` : "";

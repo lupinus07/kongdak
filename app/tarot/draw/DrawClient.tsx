@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type PointerEvent } from "react";
 import { TAROT_TOPICS, TAROT_TOPIC_QUESTIONS, drawRandomCard, parseTopic } from "@/lib/tarot";
+import { drawResultHref, getTodayDraw, saveTodayDraw } from "@/lib/tarot-daily";
 
 const ANGLES = [-24, -16, -8, 0, 8, 16, 24];
 
@@ -14,6 +15,12 @@ export function DrawClient() {
   const [selected, setSelected] = useState<number | null>(null);
   const [shuffleKey, setShuffleKey] = useState(0);
   const [hovered, setHovered] = useState<number | null>(null);
+
+  // 하루 1장: 오늘 이미 뽑았다면 뽑았던 카드의 결과로 보낸다.
+  useEffect(() => {
+    const today = getTodayDraw();
+    if (today) router.replace(drawResultHref(today));
+  }, [router]);
 
   // 다른 화면에 다녀와도 이전에 고른 카드가 남지 않도록, 화면이 가려질 때 선택을 비운다.
   // (페이지 상태가 보존되는 경우에도 effect 정리 함수는 실행된다)
@@ -33,7 +40,9 @@ export function DrawClient() {
   function confirm() {
     if (selected === null) return;
     const { card, reversed } = drawRandomCard();
-    router.push(`/tarot/result?topic=${topicId}&card=${card}&rev=${reversed ? 1 : 0}`);
+    const draw = { card, reversed, topic: topicId };
+    saveTodayDraw(draw);
+    router.push(drawResultHref(draw));
   }
 
   function shuffle() {

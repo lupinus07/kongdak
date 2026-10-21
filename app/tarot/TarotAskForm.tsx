@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TAROT_TOPICS, type TarotTopicId } from "@/lib/tarot";
+import { drawResultHref, getTodayDraw, type DailyDraw } from "@/lib/tarot-daily";
 
 const line = {
   width: 24,
@@ -50,6 +51,12 @@ const icons: Record<TarotTopicId, React.ReactNode> = {
 export function TarotAskForm() {
   const [topic, setTopic] = useState<TarotTopicId>("crush");
   const [worry, setWorry] = useState("");
+  const [today, setToday] = useState<DailyDraw | null>(null);
+  useEffect(() => {
+    // localStorage는 마운트 뒤에만 읽을 수 있다
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setToday(getTodayDraw());
+  }, []);
 
   return (
     <>
@@ -88,11 +95,16 @@ export function TarotAskForm() {
         />
       </div>
 
+      {today && (
+        <p className="m-0 text-center text-[13px] text-ink-sub">
+          오늘의 무료 카드는 이미 뽑았어요. 내일 또 만나요
+        </p>
+      )}
       <Link
-        href={`/tarot/draw?topic=${topic}`}
+        href={today ? drawResultHref(today) : `/tarot/draw?topic=${topic}`}
         className="mt-auto flex h-[58px] items-center justify-center gap-2 rounded-[29px] bg-brand font-title text-[19px] text-white no-underline shadow-[0_10px_22px_rgba(194,37,92,0.28)]"
       >
-        카드 뽑으러 가기
+        {today ? "오늘 뽑은 카드 다시 보기" : "카드 뽑으러 가기"}
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M9 6l6 6-6 6" />
         </svg>
