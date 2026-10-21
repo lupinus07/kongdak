@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/report";
 import { TAROT_CARDS } from "@/lib/tarot-cards";
 import { fetchInterpretation, type TarotInterpretation } from "@/lib/tarot-interpretation";
 import { TAROT_TOPICS, parseTopic } from "@/lib/tarot";
+import { renderTarotImage } from "@/lib/tarot-image";
 
 const sectionTitle = "font-title text-base text-brand";
 const bodyText = "m-0 text-sm leading-relaxed text-[#6B4A58]";
@@ -24,6 +25,7 @@ export function ResultClient() {
   const key = card ? `${card.id}-${reversed ? 1 : 0}-${topicId}` : "";
   const [loaded, setLoaded] = useState<{ key: string; r: TarotInterpretation | null } | null>(null);
   const [retry, setRetry] = useState(0);
+  const [saving, setSaving] = useState(false);
   useEffect(() => {
     if (!card) return;
     let alive = true;
@@ -45,6 +47,36 @@ export function ResultClient() {
   }
 
   const r = loaded?.key === key ? loaded.r : undefined;
+
+  // 모바일은 공유 시트(이미지 저장·카카오톡 등)를 열고, 지원하지 않으면 파일로 내려받는다.
+  async function saveImage() {
+    if (!r || saving) return;
+    setSaving(true);
+    try {
+      const blob = await renderTarotImage({
+        cardImage: `/tarot/${String(card!.id).padStart(2, "0")}.webp`,
+        cardName: card!.ko,
+        reversed,
+        topicLabel,
+        interpretation: r,
+      });
+      const file = new File([blob], `kongdak-tarot-${card!.id}.png`, { type: "image/png" });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      if ((e as Error).name !== "AbortError") alert("이미지를 저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <>
@@ -129,9 +161,11 @@ export function ResultClient() {
         <div className="flex gap-2.5">
           <button
             type="button"
-            className="h-14 flex-1 rounded-[28px] border-2 border-brand bg-white font-title text-[17px] text-brand"
+            onClick={saveImage}
+            disabled={!r || saving}
+            className="h-14 flex-1 rounded-[28px] border-2 border-brand bg-white font-title text-[17px] text-brand disabled:opacity-50"
           >
-            저장하기
+            {saving ? "만드는 중…" : "저장하기"}
           </button>
           <Link
             href="/compat"
