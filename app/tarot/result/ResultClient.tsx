@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { TAROT_CARDS } from "@/lib/tarot-cards";
@@ -33,24 +34,16 @@ export function ResultClient() {
   return (
     <>
       <div className="flex items-center gap-4">
-        <div className="h-[226px] w-[132px] shrink-0 rounded-[14px] border-[3px] border-badge bg-white p-1.5 shadow-[0_10px_22px_rgba(120,20,60,0.18)]">
-          <div className="flex size-full flex-col items-center gap-1 border-[1.5px] border-[#2B2B2B] bg-[#F4EEDC] p-1 font-serif text-[#2B2B2B]">
-            <span className="text-[13px] tracking-[1px]">{card.numeral}</span>
-            <div
-              role="img"
-              aria-label={`${card.ko} 카드 원본 이미지 자리`}
-              className={`flex w-full flex-1 items-center justify-center border border-[#2B2B2B] bg-[repeating-linear-gradient(45deg,#EDE4CC_0_6px,#F4EEDC_6px_12px)] p-1 text-center font-body text-[11px] leading-snug text-[#6B5B3E] ${
-                reversed ? "rotate-180" : ""
-              }`}
-            >
-              <span className={reversed ? "rotate-180" : ""}>
-                1909 원본
-                <br />
-                카드 이미지
-              </span>
-            </div>
-            <span className="text-[11px] uppercase tracking-[1.5px]">{card.en}</span>
-          </div>
+        <div className="w-[132px] shrink-0 motion-safe:animate-[card-reveal_0.6s_ease-out] rounded-[14px] border-[3px] border-badge bg-white p-1 shadow-[0_10px_22px_rgba(120,20,60,0.18)]">
+          <Image
+            src={`/tarot/${String(card.id).padStart(2, "0")}.webp`}
+            alt={`${card.ko} 카드${reversed ? " (역방향)" : ""}`}
+            width={600}
+            height={1006}
+            priority
+            unoptimized
+            className={`block h-auto w-full rounded-[9px] ${reversed ? "rotate-180" : ""}`}
+          />
         </div>
 
         <div className="flex flex-col gap-1.5">
