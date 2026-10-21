@@ -1,8 +1,8 @@
 export const TAROT_TOPICS = [
   { id: "crush", label: "짝사랑" },
-  { id: "heart", label: "그 사람 속마음" },
+  { id: "their_heart", label: "그 사람 속마음" },
   { id: "some", label: "썸 진행 상황" },
-  { id: "reunion", label: "이별 · 재회" },
+  { id: "breakup", label: "이별 · 재회" },
   { id: "confess", label: "고백해도 좋은 타이밍일까?" },
 ] as const;
 
@@ -10,9 +10,9 @@ export type TarotTopicId = (typeof TAROT_TOPICS)[number]["id"];
 
 export const TAROT_TOPIC_QUESTIONS: Record<TarotTopicId, string> = {
   crush: "그 사람도 날 좋아할까?",
-  heart: "그 사람은 나를 어떻게 생각할까?",
+  their_heart: "그 사람은 나를 어떻게 생각할까?",
   some: "우리 썸, 어디까지 왔을까?",
-  reunion: "다시 만날 수 있을까?",
+  breakup: "다시 만날 수 있을까?",
   confess: "고백해도 좋은 타이밍일까?",
 };
 
