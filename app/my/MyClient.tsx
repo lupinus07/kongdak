@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LoginPrompt } from "@/components/LoginPrompt";
 import { useSession } from "@/lib/session";
@@ -137,6 +137,12 @@ export function MyClient() {
   const { session, ready } = useSession();
   const paramTab = useSearchParams().get("tab");
   const [tab, setTab] = useState<Tab>(paramTab === "readings" ? "readings" : "orders");
+  const router = useRouter();
+  // 고른 탭을 주소(?tab=)에도 남겨서, 풀이를 열었다가 뒤로 오면 같은 탭이 보이게 한다
+  function selectTab(id: Tab) {
+    setTab(id);
+    router.replace(`/my?tab=${id}`, { scroll: false });
+  }
   // undefined: 불러오는 중, null: 실패
   const [orders, setOrders] = useState<MyOrder[] | null | undefined>(undefined);
   const loggedIn = ready && !!session;
@@ -177,7 +183,7 @@ export function MyClient() {
             type="button"
             role="tab"
             aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
+            onClick={() => selectTab(t.id)}
             className={`h-10 rounded-[11px] text-sm ${tab === t.id ? "bg-bg font-title text-brand" : "text-ink-sub"}`}
           >
             {t.label}
