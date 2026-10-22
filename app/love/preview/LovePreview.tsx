@@ -12,7 +12,9 @@ export function LovePreview() {
   const [draft, setDraft] = useState<LoveDraft | null | undefined>(undefined);
 
   useEffect(() => {
+    // localStorage는 브라우저에서만 읽을 수 있어서 마운트 뒤에 불러온다
     const saved = loadOrderDraft("love");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDraft(saved && saved.product === "love" && isDraftReady(saved) ? saved : null);
   }, []);
 
