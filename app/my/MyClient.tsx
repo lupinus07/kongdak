@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LoginPrompt } from "@/components/LoginPrompt";
 import { useSession } from "@/lib/session";
-import { MOCK_ORDERS, MOCK_READINGS, refundDeadline } from "@/lib/mock-my";
+import { fetchMyOrders, formatDate, methodName, refundDeadline, type MyOrder } from "@/lib/my-orders";
 import { loadMyReadings, type SavedReading } from "@/lib/my-readings";
 import { PRODUCTS } from "@/lib/products";
 
@@ -26,21 +26,30 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: "pink" | "
   return <span className={`rounded-lg px-2 py-[3px] text-xs ${cls}`}>{children}</span>;
 }
 
-function Orders() {
+const STATUS_BADGE: Record<MyOrder["status"], string> = { DONE: "", REFUNDED: "환불됨", CANCELED: "결제 취소" };
+
+function Orders({ orders }: { orders: MyOrder[] }) {
   return (
     <div className="flex flex-col gap-3">
-      {MOCK_ORDERS.map((o) => {
-        const until = refundDeadline(o.paidAt, o.opened);
+      {orders.map((o) => {
+        const until = o.status === "DONE" ? refundDeadline(o.paidAt, o.opened) : null;
         return (
           <div key={o.id} className={card}>
             <div className="flex items-center justify-between">
               <span className="font-title text-base">{PRODUCTS[o.product].name}</span>
               <span className="font-title text-base text-brand">{o.amount.toLocaleString()}원</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[13px] text-ink-sub">{o.paidAt.replaceAll("-", ".")} 결제</span>
-              <Badge tone={o.opened ? "gray" : "pink"}>{o.opened ? "풀이 열람함" : "아직 안 열어봤어요"}</Badge>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[13px] text-ink-sub">
+                {formatDate(o.paidAt)} 결제{methodName(o.method) && ` · ${methodName(o.method)}`}
+              </span>
+              {o.status === "DONE" ? (
+                <Badge tone={o.opened ? "gray" : "pink"}>{o.opened ? "풀이 열람함" : "아직 안 열어봤어요"}</Badge>
+              ) : (
+                <Badge tone="gray">{STATUS_BADGE[o.status]}</Badge>
+              )}
             </div>
+            <span className="text-xs text-ink-mute">주문번호 {o.orderCode}</span>
             {until && <p className="m-0 text-xs text-ink-sub">풀이를 열기 전이라면 {until}까지 환불할 수 있어요</p>}
           </div>
         );
@@ -52,23 +61,42 @@ function Orders() {
   );
 }
 
-function Readings() {
+function Readings({ orders }: { orders: MyOrder[] }) {
   return (
     <div className="flex flex-col gap-3">
-      {MOCK_READINGS.map((r) => (
-        <Link
-          key={r.id}
-          href={`${PRODUCTS[r.product].resultHref}?id=${r.id}`}
-          className={`${card} text-ink no-underline`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="font-title text-base">{r.product === "love" ? "나의 연애운" : "둘의 궁합"}</span>
-            {r.opened ? <Badge tone="gray">다시 보기 ›</Badge> : <Badge tone="yellow">열어보기 ›</Badge>}
-          </div>
-          <span className="text-[13px] text-ink-sub">{r.summary}</span>
-          <span className="text-xs text-ink-mute">{r.at}</span>
+      {orders
+        .filter((o) => o.status === "DONE")
+        .map((o) => (
+          <Link
+            key={o.id}
+            href={`${PRODUCTS[o.product].resultHref}?t=${o.token}`}
+            className={`${card} text-ink no-underline`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-title text-base">{o.product === "love" ? "나의 연애운" : "둘의 궁합"}</span>
+              {o.opened ? <Badge tone="gray">다시 보기 ›</Badge> : <Badge tone="yellow">열어보기 ›</Badge>}
+            </div>
+            <span className="text-[13px] text-ink-sub">{o.summary}</span>
+            <span className="text-xs text-ink-mute">{formatDate(o.paidAt)}</span>
+          </Link>
+        ))}
+    </div>
+  );
+}
+
+/** 아직 결제한 풀이가 없을 때 */
+function Empty() {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-3xl bg-white px-4 py-8 text-center">
+      <p className="m-0 text-sm text-ink-sub">아직 결제한 풀이가 없어요.</p>
+      <div className="flex gap-2">
+        <Link href="/love" className="rounded-[22px] bg-brand px-4 py-2.5 font-title text-sm text-white no-underline">
+          나의 연애운
         </Link>
-      ))}
+        <Link href="/compat" className="rounded-[22px] bg-brand px-4 py-2.5 font-title text-sm text-white no-underline">
+          둘의 궁합
+        </Link>
+      </div>
     </div>
   );
 }
@@ -109,6 +137,18 @@ export function MyClient() {
   const { session, ready } = useSession();
   const paramTab = useSearchParams().get("tab");
   const [tab, setTab] = useState<Tab>(paramTab === "readings" ? "readings" : "orders");
+  // undefined: 불러오는 중, null: 실패
+  const [orders, setOrders] = useState<MyOrder[] | null | undefined>(undefined);
+  const loggedIn = ready && !!session;
+
+  useEffect(() => {
+    if (!loggedIn) return;
+    let alive = true;
+    fetchMyOrders().then((list) => alive && setOrders(list));
+    return () => {
+      alive = false;
+    };
+  }, [loggedIn]);
 
   if (!ready) return null;
 
@@ -145,7 +185,12 @@ export function MyClient() {
         ))}
       </div>
 
-      {tab === "orders" ? <Orders /> : <Readings />}
+      {orders === undefined && <p className="m-0 py-6 text-center text-sm text-ink-sub">기록을 불러오고 있어요…</p>}
+      {orders === null && (
+        <p className="m-0 py-6 text-center text-sm text-ink-sub">기록을 불러오지 못했어요. 잠시 후 다시 들어와 주세요.</p>
+      )}
+      {orders && orders.length === 0 && <Empty />}
+      {orders && orders.length > 0 && (tab === "orders" ? <Orders orders={orders} /> : <Readings orders={orders} />)}
     </>
   );
 }

@@ -22,6 +22,14 @@ export function isDraftReady(d: OrderDraft): boolean {
   return births.every((b) => checkBirthDate(b) === "ok");
 }
 
+/** 주문 입력값 한 줄 요약 (결제 화면·내 기록) */
+export function draftSummary(d: OrderDraft): string {
+  if (d.product === "compat") {
+    return `${d.relation} · ${d.me?.birth || "-"} ♥ ${d.you?.birth || "-"}`;
+  }
+  return `${d.situation} · ${d.birth || "-"} (${d.calendar})`;
+}
+
 const KEY = "kongdak:order-draft";
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
