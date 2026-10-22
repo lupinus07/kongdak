@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import * as PortOne from "@portone/browser-sdk/v2";
 import { BackHeader } from "@/components/BackHeader";
+import { BusinessFooter } from "@/components/BusinessFooter";
 import { BenefitBox, inputCls } from "@/components/form";
 import { draftSummary, loadOrderDraft, saveOrderDraft, type OrderDraft } from "@/lib/order-draft";
 import { channelKeyFor, PAY_METHODS, type PayMethod, type PayMethodId } from "@/lib/payment-methods";
@@ -204,6 +205,7 @@ export function PaymentClient() {
           </>
         )}
       </main>
+      <BusinessFooter />
     </>
   );
 }

@@ -3,6 +3,7 @@ import { Heart } from "@/components/icons/Heart";
 import { CoupleHero, CoupleSmall, SoloSparkle } from "@/components/icons/Characters";
 import { MenuButton } from "@/components/MenuButton";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { BusinessFooter } from "@/components/BusinessFooter";
 import { TabBar } from "@/components/TabBar";
 
 export const metadata = { alternates: { canonical: "/" } };
@@ -89,6 +90,7 @@ export default function Home() {
           </Link>
         </div>
       </main>
+      <BusinessFooter />
       <TabBar />
     </PhoneFrame>
   );
