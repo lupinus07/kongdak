@@ -10,6 +10,7 @@ import { fetchInterpretation, type TarotInterpretation } from "@/lib/tarot-inter
 import { TAROT_TOPICS, parseTopic } from "@/lib/tarot";
 import { drawResultHref, getTodayDraw, type DailyDraw } from "@/lib/tarot-daily";
 import { renderTarotImage } from "@/lib/tarot-image";
+import { sharePath } from "@/lib/tarot-share";
 
 const sectionTitle = "font-title text-base text-brand";
 const bodyText = "m-0 text-sm leading-relaxed text-[#6B4A58]";
@@ -138,6 +139,25 @@ export function ResultClient() {
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
   }
 
+  // 친구에게 결과 링크를 보낸다. 링크에 카드·고민·정역이 담겨 있어 DB에 따로 저장하지 않는다.
+  async function shareLink() {
+    const url = `${location.origin}${sharePath({ card: card!.id, reversed, topic: topicId })}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "콩닥 타로", text: `오늘 내 타로 카드는 '${card!.ko}'! 너도 한 장 뽑아봐`, url });
+        return;
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      alert("링크를 복사했어요. 친구에게 붙여넣어 보내 주세요.");
+    } catch {
+      prompt("이 링크를 복사해서 친구에게 보내 주세요", url);
+    }
+  }
+
   // 카카오톡 안 브라우저는 저장이 막힐 때가 있어서, 같은 결과를 기본 브라우저(크롬·사파리)로 다시 연다.
   function openInBrowser() {
     const url = `${location.origin}${drawResultHref({ card: card!.id, reversed, topic: topicId })}`;
@@ -229,13 +249,22 @@ export function ResultClient() {
             type="button"
             onClick={saveImage}
             disabled={!r || saving}
-            className="h-14 flex-1 rounded-[28px] border-2 border-brand bg-white font-title text-[17px] text-brand disabled:opacity-50"
+            className="h-12 flex-1 rounded-[24px] border-2 border-brand bg-white font-title text-base text-brand disabled:opacity-50"
           >
-            {saving ? "만드는 중…" : "저장하기"}
+            {saving ? "만드는 중…" : "이미지 저장"}
           </button>
+          <button
+            type="button"
+            onClick={shareLink}
+            className="h-12 flex-1 rounded-[24px] border-2 border-brand bg-white font-title text-base text-brand"
+          >
+            친구에게 공유
+          </button>
+        </div>
+        <div className="flex">
           <Link
             href="/compat"
-            className="flex h-14 flex-[1.8] items-center justify-center gap-1.5 rounded-[28px] bg-brand font-title text-[17px] text-white no-underline shadow-[0_10px_22px_rgba(194,37,92,0.28)]"
+            className="flex h-14 flex-1 items-center justify-center gap-1.5 rounded-[28px] bg-brand font-title text-[17px] text-white no-underline shadow-[0_10px_22px_rgba(194,37,92,0.28)]"
           >
             그 사람과 궁합 보기
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
