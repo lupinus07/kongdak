@@ -196,6 +196,17 @@ export function PaymentClient() {
                   주문 내용을 확인했고 결제에 동의해요. 풀이를 연 뒤에는 서비스 오류가 아니면 환불이 어려워요.
                 </span>
               </label>
+              <p className="m-0 pl-7 text-xs leading-relaxed text-ink-mute">
+                결제하면{" "}
+                <Link href="/terms" className="text-ink-sub">
+                  이용약관
+                </Link>
+                과{" "}
+                <Link href="/privacy" className="text-ink-sub">
+                  개인정보처리방침
+                </Link>
+                (풀이 작성을 위한 국외 이전 포함)에 동의하게 돼요.
+              </p>
               {!canPay && !paying && ready && (
                 <p className="m-0 text-xs text-brand">
                   {guest && !phoneOk ? "휴대폰 번호 뒷자리 4자리를 입력해 주세요" : !agreed ? "결제 동의에 체크해 주세요" : ""}
