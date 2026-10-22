@@ -2,8 +2,9 @@ import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { DrawClient } from "./DrawClient";
+import { privateMetadata } from "@/lib/site";
 
-export const metadata = { title: "카드 뽑기 - 콩닥" };
+export const metadata = privateMetadata("카드 뽑기");
 
 export default function TarotDrawPage() {
   return (

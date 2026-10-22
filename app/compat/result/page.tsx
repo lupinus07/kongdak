@@ -2,8 +2,9 @@ import Link from "next/link";
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Disclaimer, Skeleton } from "@/components/report";
+import { privateMetadata } from "@/lib/site";
 
-export const metadata = { title: "우리의 궁합 - 콩닥" };
+export const metadata = privateMetadata("우리의 궁합");
 
 const CARDS = [
   { title: "잘 맞는 점", bg: "#FFE3EC", stroke: "#C2255C", icon: "M5 12l5 5L20 7" },

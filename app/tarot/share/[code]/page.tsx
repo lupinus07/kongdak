@@ -9,7 +9,8 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { TAROT_TOPICS, TAROT_TOPIC_QUESTIONS } from "@/lib/tarot";
 import { TAROT_CARDS } from "@/lib/tarot-cards";
 import { fetchInterpretation } from "@/lib/tarot-interpretation";
-import { parseShareCode } from "@/lib/tarot-share";
+import { pageMetadata } from "@/lib/site";
+import { parseShareCode, sharePath } from "@/lib/tarot-share";
 
 type Props = { params: Promise<{ code: string }> };
 
@@ -19,9 +20,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!share) return { title: "콩닥 타로" };
   const card = TAROT_CARDS[share.card];
   const topic = TAROT_TOPICS.find((t) => t.id === share.topic)!.label;
-  const title = `친구가 뽑은 타로 카드는 '${card.ko}' - 콩닥`;
-  const description = `${topic} · ${TAROT_TOPIC_QUESTIONS[share.topic]} 나도 오늘의 카드 한 장 뽑아볼까요?`;
-  return { title, description, openGraph: { title, description, siteName: "콩닥" } };
+  const direction = share.reversed ? "역방향" : "정방향";
+  // 검색 제목은 "카드 + 방향 + 고민"(예: 죽음 역방향 타로 풀이 · 이별 · 재회), 메신저 미리보기는 친구 공유 문구
+  const meta = pageMetadata({
+    title: `${card.ko} ${direction} 타로 풀이 · ${topic}`,
+    description: `${topic} 고민에 ${card.ko} ${direction} 카드가 나왔다면? ${TAROT_TOPIC_QUESTIONS[share.topic]} 콩닥 연애 타로 풀이를 확인하고 나도 오늘의 카드 한 장 뽑아 보세요.`,
+    path: sharePath(share),
+  });
+  return {
+    ...meta,
+    openGraph: {
+      ...meta.openGraph,
+      title: `친구가 뽑은 타로 카드는 '${card.ko}'`,
+      // 사이트 기본 그림 대신 이 카드의 미리보기 그림(같은 폴더의 opengraph-image.tsx)
+      images: [{ url: `${sharePath(share)}/opengraph-image`, width: 1200, height: 630, alt: `${card.ko} ${direction} 타로 카드` }],
+    },
+  };
 }
 
 /** 친구가 공유한 타로 결과. 링크에 담긴 카드를 보여주고(하루 1장 기록과 무관), 나도 뽑아보게 이끈다. */

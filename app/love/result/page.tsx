@@ -10,8 +10,9 @@ import { calcSaju, type Saju } from "@/lib/saju";
 import { sajuReading } from "@/lib/saju-reading";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { privateMetadata } from "@/lib/site";
 
-export const metadata = { title: "나의 연애운 - 콩닥" };
+export const metadata = privateMetadata("나의 연애운 결과");
 
 const CHAPTERS = [
   { label: "CHAPTER 1", title: "나의 사주 원국", pillars: true },

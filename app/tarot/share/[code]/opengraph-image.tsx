@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import { loadJua } from "@/lib/og-font";
 import { createPublicClient } from "@/lib/supabase/public";
 import { TAROT_TOPICS, TAROT_TOPIC_QUESTIONS } from "@/lib/tarot";
 import { TAROT_CARDS } from "@/lib/tarot-cards";
@@ -12,16 +13,6 @@ import { parseShareCode } from "@/lib/tarot-share";
 export const alt = "친구가 뽑은 콩닥 타로 카드";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-
-/** 그림에 들어가는 글자만 담은 Jua 폰트를 Google Fonts에서 받는다 (전체 한글 폰트는 너무 커서). */
-async function loadJua(text: string) {
-  const css = await (
-    await fetch(`https://fonts.googleapis.com/css2?family=Jua&text=${encodeURIComponent(text)}`)
-  ).text();
-  const url = /src: url\((.+?)\) format\('(?:opentype|truetype)'\)/.exec(css)?.[1];
-  if (!url) throw new Error("Jua 폰트를 찾지 못했어요");
-  return (await fetch(url)).arrayBuffer();
-}
 
 export default async function Image({ params }: { params: Promise<{ code: string }> }) {
   const share = parseShareCode((await params).code);

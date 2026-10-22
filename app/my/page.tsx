@@ -2,8 +2,9 @@ import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { MyClient } from "./MyClient";
+import { privateMetadata } from "@/lib/site";
 
-export const metadata = { title: "내 기록 - 콩닥" };
+export const metadata = privateMetadata("내 기록");
 
 export default function MyPage() {
   return (
