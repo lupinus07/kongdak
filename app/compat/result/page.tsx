@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { ResultLinkBox } from "@/components/ResultLinkBox";
 import { Disclaimer, Skeleton } from "@/components/report";
 import { privateMetadata } from "@/lib/site";
 
@@ -17,12 +19,15 @@ const CARDS = [
   },
 ];
 
-// TODO: ?order= 로 주문을 확인하고 readings에서 풀이를 불러온다. 지금은 레이아웃만 보여준다.
+// TODO: ?t= 결과 링크로 주문을 확인하고(lib/orders-server.ts) readings에서 풀이를 불러온다. 지금은 레이아웃만 보여준다.
 export default function CompatResultPage() {
   return (
     <PhoneFrame>
       <BackHeader title="우리의 궁합" href="/" />
       <main className="flex flex-1 flex-col gap-4 px-[22px] pb-6 pt-2">
+        <Suspense>
+          <ResultLinkBox product="compat" />
+        </Suspense>
         <section className="flex flex-col items-center gap-2.5 rounded-[32px] bg-white px-5 py-[22px] shadow-[0_8px_24px_rgba(194,37,92,0.10)]">
           <div className="relative size-[168px]">
             <svg width="168" height="168" viewBox="0 0 168 168" aria-hidden="true">

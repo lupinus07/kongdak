@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { CoupleTitle } from "@/components/icons/Characters";
 import { saveOrderDraft, type OrderDraft } from "@/lib/order-draft";
@@ -28,6 +29,7 @@ export function LoginSheet({
   onClose: () => void;
 }) {
   const copy = COPY[product];
+  const router = useRouter();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -44,6 +46,12 @@ export function LoginSheet({
     // 카카오 로그인(회원가입) 화면으로 나갔다 돌아와도 입력이 남도록 먼저 보관한다.
     if (draft) saveOrderDraft(draft);
     loginWithKakao("/payment");
+  }
+
+  // 회원가입이 번거로운 사람은 로그인 없이 바로 결제한다 (결과는 링크로 받는다)
+  function payAsGuest() {
+    if (draft) saveOrderDraft(draft);
+    router.push("/payment");
   }
 
   return (
@@ -78,8 +86,15 @@ export function LoginSheet({
           </svg>
           카카오로 시작하기
         </button>
+        <button
+          type="button"
+          onClick={payAsGuest}
+          className="-mt-1 h-12 w-full rounded-[14px] border-2 border-[#F3C6D6] bg-white font-title text-base text-brand"
+        >
+          로그인 없이 결제하기
+        </button>
         <p className="m-0 text-center text-xs leading-relaxed text-[#8C6A78]">
-          처음이라면 카카오 계정으로 바로 가입돼요.
+          처음이라면 카카오 계정으로 바로 가입돼요. 로그인 없이 결제하면 결과를 링크로 받아요.
           <br />
           시작하면{" "}
           <Link href="/terms" className="text-[#8C6A78]">

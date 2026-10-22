@@ -3,13 +3,14 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { ResultLinkBox } from "@/components/ResultLinkBox";
 import { Chap, Disclaimer, H, P, Sec, Skeleton } from "@/components/report";
 import { SajuChart } from "@/components/SajuChart";
 import { checkBirthDate } from "@/lib/birth";
 import { calcSaju, type Saju } from "@/lib/saju";
 import { sajuReading } from "@/lib/saju-reading";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { loadPaidOrder } from "@/lib/orders-server";
 import { privateMetadata } from "@/lib/site";
 
 export const metadata = privateMetadata("나의 연애운 결과");
@@ -38,19 +39,12 @@ function Notice({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** 결제가 끝난 본인의 주문인지 확인하고, 입력값으로 사주 원국을 계산해 readings.saju에 저장한다. */
+/** 결과 링크(?t=)로 결제가 끝난 주문을 찾고, 입력값으로 사주 원국을 계산해 readings.saju에 저장한다. */
 async function loadSaju(
-  orderId: string | undefined,
-): Promise<{ saju: Saju; situation?: string; gender?: string } | "not-found" | "no-birth"> {
-  if (!orderId) return "not-found";
-  const supabase = await createClient();
-  const { data: order } = await supabase
-    .from("orders")
-    .select("id, product_code, status, input")
-    .eq("id", orderId)
-    .maybeSingle(); // RLS: 본인 주문만 조회된다
-  if (!order || order.status !== "DONE" || order.product_code !== "love")
-    return "not-found";
+  token: string | undefined,
+): Promise<{ saju: Saju; situation?: string; gender?: string; orderCode: string } | "not-found" | "no-birth"> {
+  const order = await loadPaidOrder(token, "love");
+  if (!order) return "not-found";
 
   const input = order.input as {
     birth?: string;
@@ -72,13 +66,13 @@ async function loadSaju(
     .update({ saju })
     .eq("order_id", order.id)
     .is("saju", null);
-  return { saju, situation: input.situation, gender: input.gender };
+  return { saju, situation: input.situation, gender: input.gender, orderCode: order.orderCode };
 }
 
 export default function LoveResultPage({
   searchParams,
 }: {
-  searchParams: Promise<{ order?: string }>;
+  searchParams: Promise<{ t?: string }>;
 }) {
   return (
     <PhoneFrame>
@@ -93,19 +87,20 @@ export default function LoveResultPage({
 async function LoveResultBody({
   searchParams,
 }: {
-  searchParams: Promise<{ order?: string }>;
+  searchParams: Promise<{ t?: string }>;
 }) {
   // 결제 후 요청마다 달라지는 화면이라 미리 그리지 않고, 요청 때 처리한다(Date.now() 등 사용 가능).
   await connection();
-  const { order } = await searchParams;
-  const loaded = await loadSaju(order);
+  const { t } = await searchParams;
+  const loaded = await loadSaju(t);
   if (loaded === "not-found") return <Notice>결제한 풀이를 찾지 못했어요.</Notice>;
   if (loaded === "no-birth") return <Notice>생년월일 정보가 없는 주문이라 사주를 계산할 수 없어요.</Notice>;
-  const { saju, situation, gender } = loaded;
+  const { saju, situation, gender, orderCode } = loaded;
   const cards = sajuReading(saju, { situation, gender });
 
   return (
     <main className="flex flex-1 flex-col gap-3.5 px-[18px] pb-8 pt-2">
+      <ResultLinkBox product="love" orderCode={orderCode} />
       <section className="flex flex-col gap-3 rounded-[30px] bg-brand px-5 py-6">
         <Skeleton lines={1} tone="rgba(255,255,255,0.25)" />
         <div className="flex flex-col gap-2.5" aria-hidden="true">
