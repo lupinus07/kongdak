@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/report";
 import { TAROT_CARDS } from "@/lib/tarot-cards";
 import { fetchInterpretation, type TarotInterpretation } from "@/lib/tarot-interpretation";
 import { TAROT_TOPICS, parseTopic } from "@/lib/tarot";
-import { getTodayDraw, type DailyDraw } from "@/lib/tarot-daily";
+import { drawResultHref, getTodayDraw, type DailyDraw } from "@/lib/tarot-daily";
 import { renderTarotImage } from "@/lib/tarot-image";
 
 const sectionTitle = "font-title text-base text-brand";
@@ -16,6 +16,17 @@ const bodyText = "m-0 text-sm leading-relaxed text-[#6B4A58]";
 
 /** 카카오톡·인스타그램 등 앱 안 브라우저. 공유·다운로드가 막혀 있는 경우가 많아 이미지를 길게 눌러 저장하게 한다. */
 const IN_APP_BROWSER = /KAKAOTALK|Instagram|FBAN|FBAV|NAVER|Line\//i;
+const KAKAOTALK = /KAKAOTALK/i;
+
+/** 길게 눌러 저장할 때 앱 안 브라우저가 이미지를 다시 읽을 수 있도록, 페이지 메모리 주소(blob:) 대신 data: 주소로 바꾼다. */
+function toDataUrl(file: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
 
 export function ResultClient() {
   const params = useSearchParams();
@@ -39,6 +50,7 @@ export function ResultClient() {
   const [saving, setSaving] = useState(false);
   const [image, setImage] = useState<{ key: string; file: File } | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [inKakao, setInKakao] = useState(false);
   useEffect(() => {
     if (!card) return;
     let alive = true;
@@ -67,11 +79,6 @@ export function ResultClient() {
       alive = false;
     };
   }, [card, r, reversed, topicLabel, key]);
-
-  useEffect(() => {
-    if (!previewUrl) return;
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [previewUrl]);
 
   if (!card) {
     return (
@@ -118,7 +125,8 @@ export function ResultClient() {
     }
     // 앱 안 브라우저이거나, 공유 기능은 있는데 막힌 모바일이면 길게 눌러 저장하게 한다
     if (IN_APP_BROWSER.test(navigator.userAgent) || "canShare" in navigator) {
-      setPreviewUrl(URL.createObjectURL(file));
+      setInKakao(KAKAOTALK.test(navigator.userAgent));
+      setPreviewUrl(await toDataUrl(file));
       return;
     }
     const url = URL.createObjectURL(file);
@@ -128,6 +136,12 @@ export function ResultClient() {
     a.click();
     // 바로 해제하면 일부 브라우저에서 다운로드가 취소된다
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  }
+
+  // 카카오톡 안 브라우저는 저장이 막힐 때가 있어서, 같은 결과를 기본 브라우저(크롬·사파리)로 다시 연다.
+  function openInBrowser() {
+    const url = `${location.origin}${drawResultHref({ card: card!.id, reversed, topic: topicId })}`;
+    location.href = `kakaotalk://web/openExternal?url=${encodeURIComponent(url)}`;
   }
 
   return (
@@ -235,20 +249,48 @@ export function ResultClient() {
         <div
           role="dialog"
           aria-label="저장할 이미지"
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-black/70 px-6"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-black/85 px-6 backdrop-blur-sm"
           onClick={() => setPreviewUrl(null)}
         >
           <p className="m-0 text-center font-title text-[17px] text-white">이미지를 길게 눌러 저장해 주세요</p>
-          {/* eslint-disable-next-line @next/next/no-img-element -- 브라우저에서 만든 blob 이미지라 next/image를 쓰지 않는다 */}
+          {/* eslint-disable-next-line @next/next/no-img-element -- 브라우저에서 만든 이미지(data:)라 next/image를 쓰지 않는다 */}
           <img
             src={previewUrl}
             alt="타로 결과 이미지"
-            className="max-h-[75vh] w-auto max-w-full rounded-2xl"
+            className="max-h-[66vh] w-auto max-w-full rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           />
-          <button type="button" className="h-11 rounded-[22px] bg-white px-6 font-title text-brand">
-            닫기
-          </button>
+          {inKakao ? (
+            <>
+              <p className="m-0 text-center text-[13px] text-white/80">저장이 안 되면 크롬·사파리에서 열어 저장해 보세요</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openInBrowser();
+                  }}
+                  className="h-11 rounded-[22px] bg-brand px-5 font-title text-white"
+                >
+                  다른 브라우저로 열기
+                </button>
+                <button type="button" className="h-11 rounded-[22px] bg-white px-5 font-title text-brand">
+                  닫기
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {IN_APP_BROWSER.test(navigator.userAgent) && (
+                <p className="m-0 text-center text-[13px] text-white/80">
+                  저장이 안 되면 오른쪽 위 메뉴에서 &lsquo;다른 브라우저로 열기&rsquo;를 눌러 주세요
+                </p>
+              )}
+              <button type="button" className="h-11 rounded-[22px] bg-white px-6 font-title text-brand">
+                닫기
+              </button>
+            </>
+          )}
         </div>
       )}
     </>
