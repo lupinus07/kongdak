@@ -2,8 +2,9 @@ import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { ResultClient } from "./ResultClient";
+import { privateMetadata } from "@/lib/site";
 
-export const metadata = { title: "카드의 대답 - 콩닥" };
+export const metadata = privateMetadata("카드의 대답");
 
 export default function TarotResultPage() {
   return (

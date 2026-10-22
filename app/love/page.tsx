@@ -2,8 +2,14 @@ import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { LoveTitle } from "@/components/icons/Characters";
 import { LoveForm } from "./LoveForm";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata = { title: "나의 연애운 - 콩닥" };
+export const metadata = pageMetadata({
+  title: "나의 연애운 - 사주로 보는 올해 연애 흐름",
+  description:
+    "생년월일과 태어난 시간으로 내 사주 원국을 무료로 확인하고, 솔로·썸·연애 중·이별 후 상황에 맞춘 올해 연애운과 1년 월별 연애 흐름을 사주로 풀어 드려요.",
+  path: "/love",
+});
 
 export default function LovePage() {
   return (

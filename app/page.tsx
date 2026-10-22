@@ -5,6 +5,8 @@ import { MenuButton } from "@/components/MenuButton";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { TabBar } from "@/components/TabBar";
 
+export const metadata = { alternates: { canonical: "/" } };
+
 const priceBadge = "mt-auto self-start rounded-[10px] bg-bg px-2.5 py-1 font-title text-sm text-brand";
 const miniCard =
   "flex h-[188px] flex-col gap-1.5 rounded-[26px] bg-white p-4 text-ink no-underline shadow-[0_8px_20px_rgba(194,37,92,0.10)]";

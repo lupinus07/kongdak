@@ -1,8 +1,14 @@
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { Chap, Disclaimer, H, Li, P, Sec } from "@/components/report";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata = { title: "나의 연애운 샘플 풀이 - 콩닥" };
+export const metadata = pageMetadata({
+  title: "연애운 샘플 풀이 - 사주 연애운 미리 보기",
+  description:
+    "콩닥 사주 연애운 풀이가 어떻게 나오는지 샘플로 먼저 확인해 보세요. 연애 DNA, 이성 인연, 잘 맞는 사람, 1년 월별 연애 흐름까지 담겨 있어요.",
+  path: "/love/sample",
+});
 
 type Element = "wood" | "fire" | "earth" | "metal" | "water";
 

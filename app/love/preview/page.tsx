@@ -1,8 +1,9 @@
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { LovePreview } from "./LovePreview";
+import { privateMetadata } from "@/lib/site";
 
-export const metadata = { title: "나의 연애운 - 콩닥" };
+export const metadata = privateMetadata("나의 사주 원국");
 
 export default function LovePreviewPage() {
   return (
