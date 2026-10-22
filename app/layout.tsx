@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Jua, Gowun_Dodum, Noto_Serif_KR } from "next/font/google";
 import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/site";
+import { Suspense } from "react";
+import { NavTracker } from "@/components/NavTracker";
 import "./globals.css";
 
 const jua = Jua({ weight: "400", variable: "--font-jua", display: "swap" });
@@ -37,7 +39,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className={`${jua.variable} ${gowun.variable} ${notoSerifKr.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Suspense>
+          <NavTracker />
+        </Suspense>
+      </body>
     </html>
   );
 }
