@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/report";
+import { ShareSheet, type ShareContent } from "@/components/ShareSheet";
 import { TAROT_CARDS } from "@/lib/tarot-cards";
 import { fetchInterpretation, type TarotInterpretation } from "@/lib/tarot-interpretation";
 import { TAROT_TOPICS, parseTopic } from "@/lib/tarot";
@@ -66,6 +67,7 @@ export function ResultClient() {
   const [saving, setSaving] = useState(false);
   const [image, setImage] = useState<{ key: string; file: File } | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [share, setShare] = useState<ShareContent | null>(null);
   const [inKakao, setInKakao] = useState(false);
   useEffect(() => {
     if (!card) return;
@@ -164,23 +166,16 @@ export function ResultClient() {
   }
 
 
-  // 친구에게 결과 링크를 보낸다. 링크에 카드·고민·정역이 담겨 있어 DB에 따로 저장하지 않는다.
-  async function shareLink() {
+  // 친구에게 보낼 공유 내용. 링크에 카드·고민·정역이 담겨 있어 DB에 따로 저장하지 않는다.
+  function shareContent(): ShareContent {
     const url = `${location.origin}${sharePath({ card: card!.id, reversed, topic: topicId })}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "콩닥 타로", text: `오늘 내 타로 카드는 '${card!.ko}'! 너도 한 장 뽑아봐`, url });
-        return;
-      } catch (e) {
-        if ((e as Error).name === "AbortError") return;
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      alert("링크를 복사했어요. 친구에게 붙여넣어 보내 주세요.");
-    } catch {
-      prompt("이 링크를 복사해서 친구에게 보내 주세요", url);
-    }
+    return {
+      url,
+      title: `친구가 뽑은 타로 카드는 '${card!.ko}'`,
+      text: `${topicLabel} 고민으로 뽑은 오늘의 카드${r ? ` · ${r.headline}` : ""}. 너도 한 장 뽑아봐!`,
+      imageUrl: `${url}/opengraph-image`,
+      cta: { title: "나도 오늘의 카드 뽑기", url: `${location.origin}/tarot` },
+    };
   }
 
   // 카카오톡 안 브라우저는 저장이 막힐 때가 있어서, 같은 결과를 기본 브라우저(크롬·사파리)로 다시 연다.
@@ -280,7 +275,7 @@ export function ResultClient() {
           </button>
           <button
             type="button"
-            onClick={shareLink}
+            onClick={() => setShare(shareContent())}
             className="h-12 flex-1 rounded-[24px] border-2 border-brand bg-white font-title text-base text-brand"
           >
             친구에게 공유
@@ -298,6 +293,8 @@ export function ResultClient() {
           </Link>
         </div>
       </div>
+
+      {share && <ShareSheet content={share} onClose={() => setShare(null)} />}
 
       {previewUrl && (
         <div
