@@ -5,17 +5,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import * as PortOne from "@portone/browser-sdk/v2";
 import { BackHeader } from "@/components/BackHeader";
 import { BenefitBox, inputCls } from "@/components/form";
-import { loadOrderDraft, saveOrderDraft, type OrderDraft } from "@/lib/order-draft";
+import { draftSummary, loadOrderDraft, saveOrderDraft, type OrderDraft } from "@/lib/order-draft";
 import { channelKeyFor, PAY_METHODS, type PayMethod, type PayMethodId } from "@/lib/payment-methods";
 import { PRODUCTS } from "@/lib/products";
 import { loginWithKakao, useSession } from "@/lib/session";
-
-function summaryOf(d: OrderDraft) {
-  if (d.product === "compat") {
-    return `${d.relation} · ${d.me.birth || "-"} ♥ ${d.you.birth || "-"}`;
-  }
-  return `${d.situation} · ${d.birth || "-"} (${d.calendar})`;
-}
 
 /** 간편결제는 브랜드 색 큰 버튼, 카드는 그 아래 테두리 버튼 */
 const LOOK: Record<PayMethodId, { cls: string; mark: ReactNode }> = {
@@ -147,7 +140,7 @@ export function PaymentClient() {
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="font-title text-lg">{product.name}</span>
-                  <span className="truncate text-[13px] text-ink-sub">{summaryOf(draft)}</span>
+                  <span className="truncate text-[13px] text-ink-sub">{draftSummary(draft)}</span>
                 </div>
                 <span className="font-title text-[22px] text-brand">{product.price.toLocaleString()}원</span>
               </div>
