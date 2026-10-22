@@ -52,7 +52,10 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 export async function renderTarotImage(input: TarotImageInput): Promise<Blob> {
   const title = fontFamily("--font-jua", "sans-serif");
   const body = fontFamily("--font-gowun", "sans-serif");
-  await Promise.all([document.fonts.load(`40px ${title}`), document.fonts.load(`28px ${body}`)]);
+  // 실제 웹폰트(맨 앞 이름)만 미리 불러온다. next/font의 "… Fallback"은 기기의 Arial을 가리켜서
+  // Arial이 없는 기기(안드로이드 등)에선 load가 실패하므로, 폰트를 못 불러와도 그림은 계속 그린다.
+  const primary = (stack: string) => stack.split(",")[0];
+  await Promise.allSettled([document.fonts.load(`40px ${primary(title)}`), document.fonts.load(`28px ${primary(body)}`)]);
   const img = await loadImage(input.cardImage);
   const { interpretation: r } = input;
 
