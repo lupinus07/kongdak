@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/report";
 import { TAROT_CARDS } from "@/lib/tarot-cards";
 import { fetchInterpretation, type TarotInterpretation } from "@/lib/tarot-interpretation";
@@ -18,6 +18,21 @@ const bodyText = "m-0 text-sm leading-relaxed text-[#6B4A58]";
 /** 카카오톡·인스타그램 등 앱 안 브라우저. 공유·다운로드가 막혀 있는 경우가 많아 이미지를 길게 눌러 저장하게 한다. */
 const IN_APP_BROWSER = /KAKAOTALK|Instagram|FBAN|FBAV|NAVER|Line\//i;
 const KAKAOTALK = /KAKAOTALK/i;
+
+/** 아이폰·아이패드(데스크톱 모드 아이패드 포함). 사진 앱 저장은 공유 시트로만 되고, 내려받기는 '파일' 앱으로 간다. */
+function isIOS() {
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+}
+
+function downloadFile(file: File) {
+  const url = URL.createObjectURL(file);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = file.name;
+  a.click();
+  // 바로 해제하면 일부 브라우저에서 다운로드가 취소된다
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
 
 /** 길게 눌러 저장할 때 앱 안 브라우저가 이미지를 다시 읽을 수 있도록, 페이지 메모리 주소(blob:) 대신 data: 주소로 바꾼다. */
 function toDataUrl(file: Blob) {
@@ -81,6 +96,18 @@ export function ResultClient() {
     };
   }, [card, r, reversed, topicLabel, key]);
 
+  // 카톡에서 '다른 브라우저로 열기'로 넘어온 경우(?save=1): 이미지가 준비되면 바로 내려받는다 (아이폰은 탭이 필요해 제외)
+  const autoSaved = useRef(false);
+  useEffect(() => {
+    if (autoSaved.current || params.get("save") !== "1" || image?.key !== key) return;
+    if (isIOS() || IN_APP_BROWSER.test(navigator.userAgent)) return;
+    autoSaved.current = true;
+    downloadFile(image.file);
+    const url = new URL(location.href);
+    url.searchParams.delete("save");
+    history.replaceState(history.state, "", url);
+  }, [params, image, key]);
+
   if (!card) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
@@ -115,7 +142,14 @@ export function ResultClient() {
       }
     }
 
-    if (navigator.canShare?.({ files: [file] })) {
+    const inApp = IN_APP_BROWSER.test(navigator.userAgent);
+    // PC·안드로이드 브라우저는 바로 내려받는다 (안드로이드 공유 시트에는 '저장'이 없는 경우가 많다)
+    if (!inApp && !isIOS()) {
+      downloadFile(file);
+      return;
+    }
+    // 아이폰은 공유 시트의 '이미지 저장'으로 사진 앱에 저장한다
+    if (!inApp && navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({ files: [file] });
         return;
@@ -124,20 +158,11 @@ export function ResultClient() {
         // 공유가 막힌 환경이면 아래 방법으로 넘어간다
       }
     }
-    // 앱 안 브라우저이거나, 공유 기능은 있는데 막힌 모바일이면 길게 눌러 저장하게 한다
-    if (IN_APP_BROWSER.test(navigator.userAgent) || "canShare" in navigator) {
-      setInKakao(KAKAOTALK.test(navigator.userAgent));
-      setPreviewUrl(await toDataUrl(file));
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.name;
-    a.click();
-    // 바로 해제하면 일부 브라우저에서 다운로드가 취소된다
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    // 카톡 등 앱 안 브라우저는 다운로드를 막아서, 이미지를 띄워 길게 눌러 저장하거나 다른 브라우저로 열게 한다
+    setInKakao(KAKAOTALK.test(navigator.userAgent));
+    setPreviewUrl(await toDataUrl(file));
   }
+
 
   // 친구에게 결과 링크를 보낸다. 링크에 카드·고민·정역이 담겨 있어 DB에 따로 저장하지 않는다.
   async function shareLink() {
@@ -160,7 +185,7 @@ export function ResultClient() {
 
   // 카카오톡 안 브라우저는 저장이 막힐 때가 있어서, 같은 결과를 기본 브라우저(크롬·사파리)로 다시 연다.
   function openInBrowser() {
-    const url = `${location.origin}${drawResultHref({ card: card!.id, reversed, topic: topicId })}`;
+    const url = `${location.origin}${drawResultHref({ card: card!.id, reversed, topic: topicId })}&save=1`;
     location.href = `kakaotalk://web/openExternal?url=${encodeURIComponent(url)}`;
   }
 
@@ -291,7 +316,7 @@ export function ResultClient() {
           />
           {inKakao ? (
             <>
-              <p className="m-0 text-center text-[13px] text-white/80">저장이 안 되면 크롬·사파리에서 열어 저장해 보세요</p>
+              <p className="m-0 text-center text-[13px] text-white/80">크롬·사파리에서 열면 바로 저장할 수 있어요</p>
               <div className="flex gap-2">
                 <button
                   type="button"
