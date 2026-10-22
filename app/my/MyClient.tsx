@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LoginPrompt } from "@/components/LoginPrompt";
 import { useSession } from "@/lib/session";
 import { MOCK_ORDERS, MOCK_READINGS, refundDeadline } from "@/lib/mock-my";
+import { loadMyReadings, type SavedReading } from "@/lib/my-readings";
 import { PRODUCTS } from "@/lib/products";
 
 type Tab = "orders" | "readings";
@@ -72,6 +73,38 @@ function Readings() {
   );
 }
 
+/** 로그인 없이 결제한 풀이: 이 브라우저에 기억해 둔 결과 링크와, 잃어버렸을 때 다시 찾기 */
+function GuestReadings() {
+  const [list, setList] = useState<SavedReading[]>([]);
+  useEffect(() => {
+    // localStorage는 마운트 뒤에만 읽을 수 있다
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setList(loadMyReadings());
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <span className="font-title text-lg">이 기기에서 결제한 풀이</span>
+      {list.map((r) => (
+        <Link key={r.token} href={`${PRODUCTS[r.product].resultHref}?t=${r.token}`} className={`${card} text-ink no-underline`}>
+          <div className="flex items-center justify-between">
+            <span className="font-title text-base">{PRODUCTS[r.product].name}</span>
+            <Badge tone="pink">다시 보기 ›</Badge>
+          </div>
+          <span className="text-xs text-ink-mute">
+            {r.orderCode ? `주문번호 ${r.orderCode} · ` : ""}
+            {new Date(r.savedAt).toLocaleDateString("ko-KR")}
+          </span>
+        </Link>
+      ))}
+      {list.length === 0 && <p className="m-0 text-sm text-ink-sub">이 기기에서 결제한 풀이가 아직 없어요.</p>}
+      <Link href="/find" className="self-start py-1 text-sm text-brand">
+        다른 기기에서 결제했거나 링크를 잃어버렸나요? 주문번호로 찾기 ›
+      </Link>
+    </div>
+  );
+}
+
 export function MyClient() {
   const { session, ready } = useSession();
   const paramTab = useSearchParams().get("tab");
@@ -81,9 +114,12 @@ export function MyClient() {
 
   if (!session) {
     return (
-      <div className="flex flex-1 flex-col justify-center">
-        <LoginPrompt />
-      </div>
+      <>
+        <GuestReadings />
+        <div className="flex flex-1 flex-col justify-center">
+          <LoginPrompt />
+        </div>
+      </>
     );
   }
 

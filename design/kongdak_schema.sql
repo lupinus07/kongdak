@@ -90,21 +90,30 @@ insert into public.products (code, name, price) values
 -- ---------------------------------------------------------
 create table public.orders (
   id              uuid primary key default gen_random_uuid(),
-  user_id         uuid not null references public.profiles (id) on delete restrict,
+  user_id         uuid references public.profiles (id) on delete restrict,  -- 비회원 주문이면 null
+  phone_last4     text check (phone_last4 ~ '^[0-9]{4}$'),                  -- 비회원 본인 확인용 휴대폰 뒷자리
   product_code    text not null references public.products (code),
-  toss_order_id   text not null unique,       -- 토스에 넘기는 orderId
+  payment_id      text not null unique,       -- 우리가 만들어 포트원(PG)에 넘기는 결제 번호
   amount          integer not null,
   status          text not null default 'READY'
                   check (status in ('READY', 'DONE', 'CANCELED', 'REFUNDED', 'FAILED')),
-  payment_key     text unique,                -- 결제 승인 후 토스가 주는 키
-  method          text,                       -- 카드, 간편결제 등
+  pg_tx_id        text unique,                -- 결제 후 PG가 주는 거래 번호
+  pg_provider     text,                       -- 실제 처리한 PG
+  method          text,                       -- 카드, 간편결제(카카오페이 등)
   approved_at     timestamptz,
   canceled_at     timestamptz,
   input           jsonb not null,             -- 결제 당시 입력값 (생년월일 등)
-  created_at      timestamptz not null default now()
+  -- 결과 링크용 비밀 값. 링크(?t=)를 가진 사람만 결과를 연다.
+  access_token    text not null unique
+                  default replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', ''),
+  -- 화면에 보여주는 짧은 주문번호. 뒷자리 4자리와 함께 결과 링크를 다시 찾을 때 쓴다.
+  order_code      text generated always as (upper(substr(replace(id::text, '-', ''), 1, 8))) stored,
+  created_at      timestamptz not null default now(),
+  constraint orders_owner_check check (user_id is not null or phone_last4 is not null)
 );
 
 create index orders_user_id_idx on public.orders (user_id);
+create index orders_order_code_idx on public.orders (order_code);
 
 alter table public.orders enable row level security;
 
@@ -120,7 +129,7 @@ create policy "본인 주문 조회"
 create table public.readings (
   id              uuid primary key default gen_random_uuid(),
   order_id        uuid not null unique references public.orders (id) on delete restrict,
-  user_id         uuid not null references public.profiles (id) on delete cascade,
+  user_id         uuid references public.profiles (id) on delete cascade,  -- 비회원이면 null
   product_code    text not null references public.products (code),
   saju            jsonb,                      -- 계산한 사주 원국 (년월일시 간지 등)
   result          jsonb,                      -- AI가 만든 풀이 (챕터별)
