@@ -3,7 +3,7 @@
  * 유료 결제를 받으므로 상호·대표자·주소·전화번호·이메일·사업자등록번호·통신판매업 신고번호·호스팅 제공자를 모두 채워야 한다.
  */
 export const BUSINESS = {
-  name: "코드씨앗",
+  name: "말랑코드",
   ceo: "정유리",
   registrationNumber: "",
   mailOrderNumber: "", // 통신판매업 신고번호
