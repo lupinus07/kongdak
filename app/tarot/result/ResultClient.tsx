@@ -14,6 +14,9 @@ import { renderTarotImage } from "@/lib/tarot-image";
 const sectionTitle = "font-title text-base text-brand";
 const bodyText = "m-0 text-sm leading-relaxed text-[#6B4A58]";
 
+/** 카카오톡·인스타그램 등 앱 안 브라우저. 공유·다운로드가 막혀 있는 경우가 많아 이미지를 길게 눌러 저장하게 한다. */
+const IN_APP_BROWSER = /KAKAOTALK|Instagram|FBAN|FBAV|NAVER|Line\//i;
+
 export function ResultClient() {
   const params = useSearchParams();
   // 하루 1장: 오늘 뽑은 카드가 있으면 주소의 값보다 그 카드를 우선한다.
@@ -34,6 +37,8 @@ export function ResultClient() {
   const [loaded, setLoaded] = useState<{ key: string; r: TarotInterpretation | null } | null>(null);
   const [retry, setRetry] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [image, setImage] = useState<{ key: string; file: File } | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   useEffect(() => {
     if (!card) return;
     let alive = true;
@@ -42,6 +47,31 @@ export function ResultClient() {
       alive = false;
     };
   }, [card, reversed, topicId, key, retry]);
+
+  const r = loaded?.key === key ? loaded.r : undefined;
+
+  // 공유 시트는 버튼을 누른 직후에만 열리므로, 풀이가 오면 저장용 이미지를 미리 만들어 둔다.
+  useEffect(() => {
+    if (!card || !r) return;
+    let alive = true;
+    renderTarotImage({
+      cardImage: `/tarot/${String(card.id).padStart(2, "0")}.webp`,
+      cardName: card.ko,
+      reversed,
+      topicLabel,
+      interpretation: r,
+    })
+      .then((blob) => alive && setImage({ key, file: new File([blob], `kongdak-tarot-${card.id}.png`, { type: "image/png" }) }))
+      .catch(() => {}); // 실패하면 버튼을 누를 때 다시 만든다
+    return () => {
+      alive = false;
+    };
+  }, [card, r, reversed, topicLabel, key]);
+
+  useEffect(() => {
+    if (!previewUrl) return;
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
 
   if (!card) {
     return (
@@ -54,36 +84,50 @@ export function ResultClient() {
     );
   }
 
-  const r = loaded?.key === key ? loaded.r : undefined;
-
   // 모바일은 공유 시트(이미지 저장·카카오톡 등)를 열고, 지원하지 않으면 파일로 내려받는다.
   async function saveImage() {
     if (!r || saving) return;
-    setSaving(true);
-    try {
-      const blob = await renderTarotImage({
-        cardImage: `/tarot/${String(card!.id).padStart(2, "0")}.webp`,
-        cardName: card!.ko,
-        reversed,
-        topicLabel,
-        interpretation: r,
-      });
-      const file = new File([blob], `kongdak-tarot-${card!.id}.png`, { type: "image/png" });
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] });
-      } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = file.name;
-        a.click();
-        URL.revokeObjectURL(url);
+    let file = image?.key === key ? image.file : null;
+    if (!file) {
+      setSaving(true);
+      try {
+        const blob = await renderTarotImage({
+          cardImage: `/tarot/${String(card!.id).padStart(2, "0")}.webp`,
+          cardName: card!.ko,
+          reversed,
+          topicLabel,
+          interpretation: r,
+        });
+        file = new File([blob], `kongdak-tarot-${card!.id}.png`, { type: "image/png" });
+      } catch {
+        alert("이미지를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.");
+        return;
+      } finally {
+        setSaving(false);
       }
-    } catch (e) {
-      if ((e as Error).name !== "AbortError") alert("이미지를 저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.");
-    } finally {
-      setSaving(false);
     }
+
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+        return;
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return; // 사용자가 공유 시트를 닫음
+        // 공유가 막힌 환경이면 아래 방법으로 넘어간다
+      }
+    }
+    // 앱 안 브라우저이거나, 공유 기능은 있는데 막힌 모바일이면 길게 눌러 저장하게 한다
+    if (IN_APP_BROWSER.test(navigator.userAgent) || "canShare" in navigator) {
+      setPreviewUrl(URL.createObjectURL(file));
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    // 바로 해제하면 일부 브라우저에서 다운로드가 취소된다
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
   }
 
   return (
@@ -186,6 +230,27 @@ export function ResultClient() {
           </Link>
         </div>
       </div>
+
+      {previewUrl && (
+        <div
+          role="dialog"
+          aria-label="저장할 이미지"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-black/70 px-6"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <p className="m-0 text-center font-title text-[17px] text-white">이미지를 길게 눌러 저장해 주세요</p>
+          {/* eslint-disable-next-line @next/next/no-img-element -- 브라우저에서 만든 blob 이미지라 next/image를 쓰지 않는다 */}
+          <img
+            src={previewUrl}
+            alt="타로 결과 이미지"
+            className="max-h-[75vh] w-auto max-w-full rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button type="button" className="h-11 rounded-[22px] bg-white px-6 font-title text-brand">
+            닫기
+          </button>
+        </div>
+      )}
     </>
   );
 }
