@@ -52,7 +52,6 @@ const icons: Record<TarotTopicId, React.ReactNode> = {
 
 export function TarotAskForm() {
   const [topic, setTopic] = useState<TarotTopicId>("crush");
-  const [worry, setWorry] = useState("");
   // undefined: 아직 확인 전. 이미 뽑은 날에 고민 선택 화면이 잠깐 보였다 바뀌지 않도록 확인 뒤에 그린다.
   const [today, setToday] = useState<DailyDraw | null | undefined>(undefined);
   useEffect(() => {
@@ -86,20 +85,6 @@ export function TarotAskForm() {
             </button>
           );
         })}
-      </div>
-
-      <div className="flex flex-col gap-2 rounded-3xl bg-white p-4 shadow-[0_8px_24px_rgba(194,37,92,0.10)]">
-        <label htmlFor="worry" className="font-title text-base text-brand">
-          조금 더 자세히 적어볼까요? (선택)
-        </label>
-        <textarea
-          id="worry"
-          rows={4}
-          value={worry}
-          onChange={(e) => setWorry(e.target.value)}
-          placeholder="예) 같은 동아리 선배인데, 나한테만 유독 다정한 것 같아요. 그 사람도 날 좋아할까요?"
-          className="resize-none rounded-2xl border-none bg-bg px-3.5 py-3 text-[15px] leading-normal text-ink placeholder:text-[#B88A9C]"
-        />
       </div>
 
       <Link
