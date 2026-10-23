@@ -15,7 +15,8 @@ type LoveInput = { birth?: string; calendar?: string; time?: string; situation?:
 
 export type LoveReadingResult =
   | { ok: true; saju: Saju; reading: LoveReading; input: LoveInput }
-  | { ok: false; reason: "no-birth" | "pending" };
+  | { ok: false; reason: "no-birth" }
+  | { ok: false; reason: "pending"; saju: Saju };
 
 /** 이 시간이 지나도 풀이가 없으면 생성이 끊긴 것으로 보고 다시 시도할 수 있게 한다. 실패 직후 재시도 폭주도 막는다. */
 const LOCK_MS = 3 * 60 * 1000;
@@ -62,5 +63,5 @@ export async function openLoveReading(orderId: string, input: LoveInput): Promis
     });
   }
 
-  return { ok: false, reason: "pending" };
+  return { ok: false, reason: "pending", saju };
 }

@@ -4,12 +4,14 @@ import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { PollRefresh } from "@/components/PollRefresh";
+import { WaitingSteps } from "@/components/WaitingSteps";
 import { ResultLinkBox } from "@/components/ResultLinkBox";
 import { Chap, Disclaimer, H, Li, P, Sec } from "@/components/report";
 import { SajuChart } from "@/components/SajuChart";
 import { birthLabel } from "@/lib/birth";
 import { openLoveReading } from "@/lib/love-reading-server";
 import { loadPaidOrder } from "@/lib/orders-server";
+import type { Saju } from "@/lib/saju";
 import { privateMetadata } from "@/lib/site";
 
 export const metadata = privateMetadata("나의 연애운 결과");
@@ -17,11 +19,18 @@ export const metadata = privateMetadata("나의 연애운 결과");
 // AI 풀이를 처음 열 때 만들기 때문에 시간이 걸릴 수 있다(응답 뒤 after()에서 이어서 만든다)
 export const maxDuration = 300;
 
-function Waiting({ poll }: { poll?: boolean }) {
+function Waiting({ poll, saju }: { poll?: boolean; saju?: Saju }) {
   return (
     <main className="flex flex-1 flex-col justify-center gap-4 px-[18px] text-center">
+      {saju && (
+        <Sec className="text-left">
+          <Chap>나의 사주 원국</Chap>
+          <SajuChart saju={saju} />
+        </Sec>
+      )}
+      {poll ? <WaitingSteps /> : null}
       <p className="m-0 text-ink-sub">
-        풀이를 만들고 있어요. 30초~1분 정도 걸릴 수 있어요…
+        {poll ? "풀이를 정성껏 쓰는 중이에요. 1분 정도 걸릴 수 있어요." : "풀이를 만들고 있어요. 30초~1분 정도 걸릴 수 있어요…"}
         <br />
         결제는 끝났으니 나가도 괜찮아요.
       </p>
@@ -77,7 +86,7 @@ async function LoveResultBody({
     return result.reason === "no-birth" ? (
       <Notice>생년월일 정보가 없는 주문이라 사주를 계산할 수 없어요.</Notice>
     ) : (
-      <Waiting poll />
+      <Waiting poll saju={result.saju} />
     );
   }
   const { saju, reading: r, input } = result;
