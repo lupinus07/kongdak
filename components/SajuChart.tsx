@@ -36,7 +36,8 @@ function Chip({ glyph, reading, el, ring }: { glyph: string; reading: string; el
 }
 
 /** 사주 원국(네 기둥)과 오행 균형. 계산된 Saju 값을 그대로 그린다. */
-export function SajuChart({ saju }: { saju: Saju }) {
+/** dayLabel: 일주 칸 이름. 궁합처럼 두 사람을 나란히 보여줄 때 "일주 · 아내"처럼 바꾼다. */
+export function SajuChart({ saju, dayLabel = TITLE.day }: { saju: Saju; dayLabel?: string }) {
   const max = Math.max(...Object.values(saju.balance), 1);
   const bars = (Object.keys(saju.balance) as Element[]).sort((a, b) => saju.balance[b] - saju.balance[a]);
 
@@ -50,7 +51,7 @@ export function SajuChart({ saju }: { saju: Saju }) {
           const me = p.key === "day";
           return (
             <div key={p.key} className="flex flex-col items-center gap-1.5">
-              <Tg className={me ? "!text-brand" : ""}>{TITLE[p.key]}</Tg>
+              <Tg className={me ? "!text-brand" : ""}>{me ? dayLabel : TITLE[p.key]}</Tg>
               <Tg>{p.ganTen}</Tg>
               <Chip glyph={p.gan} reading={p.ganRead} el={p.ganEl} ring={me} />
               <Chip glyph={p.zhi} reading={p.zhiRead} el={p.zhiEl} />
