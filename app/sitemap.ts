@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ["/love", 0.8],
     ["/compat", 0.8],
     ["/love/sample", 0.5],
+    ["/compat/sample", 0.5],
   ];
   return pages.map(([path, priority]) => ({ url: `${SITE_URL}${path}`, changeFrequency: "weekly", priority }));
 }
