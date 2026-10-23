@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { Heart } from "@/components/icons/Heart";
 import { CoupleHero, CoupleSmall, SoloSparkle } from "@/components/icons/Characters";
 import { MenuButton } from "@/components/MenuButton";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { ReviewStrip } from "@/components/ReviewStrip";
 import { BusinessFooter } from "@/components/BusinessFooter";
 import { TabBar } from "@/components/TabBar";
 import { PRODUCTS } from "@/lib/products";
@@ -90,6 +92,10 @@ export default function Home() {
             <span className={priceBadge}>{PRODUCTS.love.price.toLocaleString()}원</span>
           </Link>
         </div>
+
+        <Suspense fallback={null}>
+          <ReviewStrip />
+        </Suspense>
       </main>
       <BusinessFooter />
       <TabBar />
