@@ -7,7 +7,7 @@ import { BenefitBox, BottomCta, ChipGroup, labelCls } from "@/components/form";
 import type { OrderDraft } from "@/lib/order-draft";
 import { PRODUCTS } from "@/lib/products";
 
-const relations = ["썸 타는 중", "연애 중", "짝사랑"] as const;
+const relations = ["썸 타는 중", "연애 중", "짝사랑", "부부"] as const;
 const genders = ["여자", "남자"] as const;
 
 export function CompatForm() {
@@ -31,7 +31,7 @@ export function CompatForm() {
       <BenefitBox items={PRODUCTS.compat.benefits} />
 
       <span className={`${labelCls} -mb-1.5`}>지금 우리 사이는?</span>
-      <ChipGroup options={relations} value={relation} onChange={setRelation} />
+      <ChipGroup options={relations} value={relation} onChange={setRelation} gap="gap-1.5" px="px-[15px]" />
 
       <div className="flex flex-col gap-2.5 rounded-[26px] bg-white p-4 shadow-[0_8px_24px_rgba(194,37,92,0.10)]">
         <label htmlFor="me-b" className={labelCls}>
