@@ -34,7 +34,7 @@ export default function Home() {
             <br />
             콩닥콩닥할까?
           </h1>
-          <p className="m-0 text-[15px] text-ink-sub">카드와 사주로 보는 우리 이야기</p>
+          <p className="m-0 font-title text-[18px] text-brand">카드와 사주로 보는 우리 이야기</p>
         </section>
 
         <Link

@@ -24,6 +24,17 @@ body {
   font-family: var(--font-body);
 }
 
+/* PC(저해상도) 화면에서는 가는 본문 폰트(Gowun Dodum)가 흐려 보여서 획을 아주 조금 덧입힌다. 폰·고해상도 화면은 그대로 둔다. */
+@media (max-resolution: 1.5dppx) {
+  body {
+    -webkit-text-stroke: 0.35px currentColor;
+  }
+  .font-title,
+  .font-hanja {
+    -webkit-text-stroke: 0;
+  }
+}
+
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
