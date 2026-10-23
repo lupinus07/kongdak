@@ -5,7 +5,8 @@ import { Chap, H, P, Sec } from "@/components/report";
 import { SajuChart } from "@/components/SajuChart";
 import { checkBirthDate } from "@/lib/birth";
 import type { Saju } from "@/lib/saju";
-import { sajuReading, type Situation } from "@/lib/saju-reading";
+import { SajuCards } from "@/components/SajuCards";
+import type { Situation } from "@/lib/saju-reading";
 
 /** 결제 전 무료 미리보기. 사주 원국은 만세력 계산이라 AI 비용이 없어 브라우저에서 바로 그린다. 나머지 챕터는 잠가 둔다. */
 
@@ -73,7 +74,6 @@ export function SajuPreview({
   }, [ready, birth, calendar, time]);
 
   if (!ready || !saju) return null;
-  const cards = sajuReading(saju, { situation, gender });
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -84,15 +84,7 @@ export function SajuPreview({
         </div>
         <H>나의 사주 원국</H>
         <SajuChart saju={saju} />
-        {cards.map((card) => (
-          <div
-            key={card.title}
-            className={`mt-1 flex flex-col gap-1.5 rounded-[18px] p-3.5 ${card.highlight ? "bg-[#FFF0F5]" : "bg-[#FFF8FA]"}`}
-          >
-            <b className="font-title text-[15px] font-normal text-brand">{card.title}</b>
-            <P>{card.body}</P>
-          </div>
-        ))}
+        <SajuCards saju={saju} situation={situation} gender={gender} />
         <p className="m-0 text-xs text-ink-sub">태어난 시간은 표준시 기준으로 계산했어요.</p>
       </Sec>
 

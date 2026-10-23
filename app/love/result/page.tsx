@@ -7,6 +7,7 @@ import { PollRefresh } from "@/components/PollRefresh";
 import { WaitingSteps } from "@/components/WaitingSteps";
 import { ResultLinkBox } from "@/components/ResultLinkBox";
 import { Chap, Disclaimer, H, Li, P, Sec } from "@/components/report";
+import { SajuCards } from "@/components/SajuCards";
 import { SajuChart } from "@/components/SajuChart";
 import { birthLabel } from "@/lib/birth";
 import { openLoveReading } from "@/lib/love-reading-server";
@@ -117,7 +118,12 @@ async function LoveResultBody({
         <Chap>CHAPTER 1</Chap>
         <H>나의 사주 원국</H>
         <SajuChart saju={saju} />
-        <P>{r.pillarsNote}</P>
+        {/* 결제 전 미리보기와 같은 카드 + AI가 쓴 원국 요약 */}
+        <SajuCards saju={saju} situation={input.situation} gender={input.gender} />
+        <div className="mt-1 flex flex-col gap-1.5 rounded-[18px] border-[1.5px] border-dashed border-[#F3B6CB] p-3.5">
+          <b className="font-title text-[15px] font-normal text-brand">내 사주 한눈에 보기</b>
+          <P>{r.pillarsNote}</P>
+        </div>
       </Sec>
 
       <Sec>
