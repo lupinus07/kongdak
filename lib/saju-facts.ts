@@ -116,7 +116,7 @@ function monthRelations(saju: Saju, ganzhi: string): string[] {
 export type LoveFacts = ReturnType<typeof buildLoveFacts>;
 
 export function buildLoveFacts(
-  input: SajuInput & { situation: string; gender: string },
+  input: SajuInput & { situation: string; gender: string; worry?: string },
   now = new Date(),
 ) {
   const saju = calcSaju(input);
@@ -168,7 +168,12 @@ export function buildLoveFacts(
   });
 
   return {
-    profile: { situation: input.situation, gender: input.gender, birthTimeKnown: input.time !== "" },
+    profile: {
+      situation: input.situation,
+      gender: input.gender,
+      birthTimeKnown: input.time !== "",
+      worry: input.worry?.trim() || null,
+    },
     pillars: saju.pillars.map((p) => ({
       position: POS_KO[p.key] + "주",
       gan: `${p.gan}(${p.ganRead})`,
