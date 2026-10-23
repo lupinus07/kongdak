@@ -31,7 +31,9 @@ export async function openLoveReading(orderId: string, input: LoveInput): Promis
 
   try {
     const facts = buildLoveFacts({ ...sajuInput, situation: input.situation ?? "솔로", gender: input.gender ?? "" });
-    const { reading } = await generateLoveReading(facts);
+    const { reading, usage } = await generateLoveReading(facts);
+    // 건당 API 비용 파악용. 출력 토큰에는 생각(thinking) 토큰이 포함된다.
+    console.log("연애운 풀이 생성", { orderId, input: usage.input_tokens, output: usage.output_tokens });
     await admin
       .from("readings")
       .update({ saju, result: reading, opened_at: row?.opened_at ?? new Date().toISOString() })
