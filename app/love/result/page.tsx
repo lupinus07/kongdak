@@ -4,26 +4,16 @@ import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { ResultLinkBox } from "@/components/ResultLinkBox";
-import { Chap, Disclaimer, H, P, Sec, Skeleton } from "@/components/report";
+import { Chap, Disclaimer, H, Li, P, Sec } from "@/components/report";
 import { SajuChart } from "@/components/SajuChart";
-import { checkBirthDate } from "@/lib/birth";
-import { calcSaju, type Saju } from "@/lib/saju";
-import { sajuReading } from "@/lib/saju-reading";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { openLoveReading } from "@/lib/love-reading-server";
 import { loadPaidOrder } from "@/lib/orders-server";
 import { privateMetadata } from "@/lib/site";
 
 export const metadata = privateMetadata("나의 연애운 결과");
 
-const CHAPTERS = [
-  { label: "CHAPTER 1", title: "나의 사주 원국", pillars: true },
-  { label: "CHAPTER 2", title: "나의 연애 DNA" },
-  { label: "CHAPTER 3", title: "연애할 때의 나" },
-  { label: "CHAPTER 4", title: "이성 인연" },
-  { label: "CHAPTER 5", title: "나와 잘 맞는 사람", split: true },
-  { label: "CHAPTER 6", title: "연애할 때 조심할 점" },
-  { label: "CHAPTER 7", title: "다가오는 1년 연애 흐름", months: true },
-];
+// AI 풀이를 처음 열 때 만들기 때문에 시간이 걸릴 수 있다
+export const maxDuration = 300;
 
 function Notice({ children }: { children: React.ReactNode }) {
   return (
@@ -39,36 +29,6 @@ function Notice({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** 결과 링크(?t=)로 결제가 끝난 주문을 찾고, 입력값으로 사주 원국을 계산해 readings.saju에 저장한다. */
-async function loadSaju(
-  token: string | undefined,
-): Promise<{ saju: Saju; situation?: string; gender?: string; orderCode: string } | "not-found" | "no-birth"> {
-  const order = await loadPaidOrder(token, "love");
-  if (!order) return "not-found";
-
-  const input = order.input as {
-    birth?: string;
-    calendar?: string;
-    time?: string;
-    situation?: string;
-    gender?: string;
-  };
-  if (!input.birth || checkBirthDate(input.birth) !== "ok") return "no-birth";
-  const saju = calcSaju({
-    birth: input.birth,
-    calendar: input.calendar ?? "양력",
-    time: input.time ?? "",
-  });
-
-  // 사주 원국은 AI 풀이가 아니라 열람 기록(opened_at)은 남기지 않는다. 이미 저장돼 있으면 건드리지 않는다.
-  await createAdminClient()
-    .from("readings")
-    .update({ saju })
-    .eq("order_id", order.id)
-    .is("saju", null);
-  return { saju, situation: input.situation, gender: input.gender, orderCode: order.orderCode };
-}
-
 export default function LoveResultPage({
   searchParams,
 }: {
@@ -77,7 +37,7 @@ export default function LoveResultPage({
   return (
     <PhoneFrame>
       <BackHeader title="나의 연애운" href="/" />
-      <Suspense fallback={<Notice>풀이를 불러오고 있어요…</Notice>}>
+      <Suspense fallback={<Notice>풀이를 만들고 있어요. 30초~1분 정도 걸릴 수 있어요…</Notice>}>
         <LoveResultBody searchParams={searchParams} />
       </Suspense>
     </PhoneFrame>
@@ -92,100 +52,155 @@ async function LoveResultBody({
   // 결제 후 요청마다 달라지는 화면이라 미리 그리지 않고, 요청 때 처리한다(Date.now() 등 사용 가능).
   await connection();
   const { t } = await searchParams;
-  const loaded = await loadSaju(t);
-  if (loaded === "not-found") return <Notice>결제한 풀이를 찾지 못했어요.</Notice>;
-  if (loaded === "no-birth") return <Notice>생년월일 정보가 없는 주문이라 사주를 계산할 수 없어요.</Notice>;
-  const { saju, situation, gender, orderCode } = loaded;
-  const cards = sajuReading(saju, { situation, gender });
+  const order = await loadPaidOrder(t, "love");
+  if (!order) return <Notice>결제한 풀이를 찾지 못했어요.</Notice>;
+  const result = await openLoveReading(order.id, order.input);
+  if (!result.ok) {
+    return result.reason === "no-birth" ? (
+      <Notice>생년월일 정보가 없는 주문이라 사주를 계산할 수 없어요.</Notice>
+    ) : (
+      <Notice>
+        풀이를 만들지 못했어요. 잠시 후 이 페이지를 새로고침해 주세요.
+        <br />
+        계속 안 되면 문의해 주세요. 풀이를 열지 못한 경우에는 환불해 드려요.
+      </Notice>
+    );
+  }
+  const { saju, reading: r } = result;
 
   return (
     <main className="flex flex-1 flex-col gap-3.5 px-[18px] pb-8 pt-2">
-      <ResultLinkBox product="love" orderCode={orderCode} />
-      <section className="flex flex-col gap-3 rounded-[30px] bg-brand px-5 py-6">
-        <Skeleton lines={1} tone="rgba(255,255,255,0.25)" />
-        <div className="flex flex-col gap-2.5" aria-hidden="true">
-          <div className="h-7 w-3/4 rounded-lg bg-white/25" />
-          <div className="h-7 w-1/2 rounded-lg bg-white/25" />
-        </div>
-        <Skeleton lines={3} tone="rgba(255,255,255,0.2)" />
-        <div className="mt-1 flex gap-1.5" aria-hidden="true">
-          {[0, 1, 2].map((i) => (
-            <span key={i} className="h-7 w-20 rounded-xl bg-white/20" />
+      <ResultLinkBox product="love" orderCode={order.orderCode} />
+      <section className="flex flex-col gap-2 rounded-[30px] bg-brand px-5 py-6 text-white">
+        <h1 className="m-0 font-title text-[28px] font-normal leading-[1.3]">
+          {r.hero.title.map((line, i) => (
+            <span key={i} className="block">
+              {line}
+            </span>
+          ))}
+        </h1>
+        <p className="m-0 text-[14.5px] leading-[1.7] text-[#FFE3EC]">{r.hero.summary}</p>
+        <div className="mt-1 flex flex-wrap gap-1.5">
+          {r.hero.tags.map((tag) => (
+            <span key={tag} className="rounded-xl bg-white/20 px-[11px] py-[5px] text-[12.5px]">
+              #{tag}
+            </span>
           ))}
         </div>
       </section>
 
-      {CHAPTERS.map((c) => (
-        <Sec key={c.label}>
-          <Chap>{c.label}</Chap>
-          <H>{c.title}</H>
+      <Sec>
+        <Chap>CHAPTER 1</Chap>
+        <H>나의 사주 원국</H>
+        <SajuChart saju={saju} />
+        <P>{r.pillarsNote}</P>
+      </Sec>
 
-          {c.pillars && (
-            <>
-              <SajuChart saju={saju} />
-              {cards.map((card) => (
-                <div
-                  key={card.title}
-                  className={`mt-1 flex flex-col gap-1.5 rounded-[18px] p-3.5 ${card.highlight ? "bg-[#FFF0F5]" : "bg-[#FFF8FA]"}`}
-                >
-                  <b className="font-title text-[15px] font-normal text-brand">{card.title}</b>
-                  <P>{card.body}</P>
-                </div>
-              ))}
-            </>
-          )}
+      <Sec>
+        <Chap>CHAPTER 2</Chap>
+        <H>
+          나의 연애 DNA
+          <br />“{r.dna.quote}”
+        </H>
+        {r.dna.paragraphs.map((p, i) => (
+          <P key={i}>{p}</P>
+        ))}
+      </Sec>
 
-          {c.split && (
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-1.5 rounded-[18px] bg-[#E3F4E1] p-3">
-                <b className="font-title text-[15px] font-normal text-[#2B6B2A]">
-                  잘 맞아요
+      <Sec>
+        <Chap>CHAPTER 3</Chap>
+        <H>
+          연애할 때의 나
+          <br />“{r.me.quote}”
+        </H>
+        {r.me.paragraphs.map((p, i) => (
+          <P key={i}>{p}</P>
+        ))}
+        {r.me.bullets.map((b, i) => (
+          <Li key={i}>{b}</Li>
+        ))}
+      </Sec>
+
+      <Sec>
+        <Chap>CHAPTER 4</Chap>
+        <H>
+          이성 인연
+          <br />“{r.partner.quote}”
+        </H>
+        {r.partner.paragraphs.map((p, i) => (
+          <P key={i}>{p}</P>
+        ))}
+      </Sec>
+
+      <Sec>
+        <Chap>CHAPTER 5</Chap>
+        <H>나와 잘 맞는 사람</H>
+        <P>{r.match.intro}</P>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-col gap-1 rounded-[18px] bg-[#E3F4E1] p-3">
+            <b className="font-title text-[15px] font-normal text-[#2B6B2A]">잘 맞아요</b>
+            <span className="text-[13px] leading-[1.55] text-[#335C32]">{r.match.good}</span>
+          </div>
+          <div className="flex flex-col gap-1 rounded-[18px] bg-[#FFF1DE] p-3">
+            <b className="font-title text-[15px] font-normal text-[#8A4B00]">한 번 더 생각해요</b>
+            <span className="text-[13px] leading-[1.55] text-[#6B4A2B]">{r.match.careful}</span>
+          </div>
+        </div>
+      </Sec>
+
+      <Sec>
+        <Chap>CHAPTER 6</Chap>
+        <H>연애할 때 조심할 점</H>
+        {r.caution.map((c, i) => (
+          <Li key={i} dot="#F59F00">
+            <b>{c.title}</b> {c.body}
+          </Li>
+        ))}
+      </Sec>
+
+      <Sec>
+        <Chap>CHAPTER 7</Chap>
+        <H>다가오는 1년 연애 흐름</H>
+        <P className="!text-[13px] text-[#5E3F4C]">절기 기준 · 하트가 많을수록 인연 기운이 강한 달</P>
+        <div className="grid grid-cols-3 gap-1.5">
+          {r.flow.months.map((m) => {
+            const mark = m.caution ? "⚠" : "♥".repeat(Math.min(Math.max(m.hearts, 0), 3));
+            const bg = m.caution ? "bg-[#FFF4E5]" : m.hearts >= 3 ? "bg-[#FFE3EC]" : "bg-[#FFF8FA]";
+            return (
+              <div key={m.month} className={`flex flex-col gap-[3px] rounded-2xl px-2 py-2.5 ${bg}`}>
+                <b className="font-title text-[15px] font-normal text-ink">
+                  {m.month} {mark}
                 </b>
-                <Skeleton lines={3} tone="#C9E6C6" />
+                <span className="text-[11.5px] leading-[1.4] text-[#6B4A58]">{m.text}</span>
               </div>
-              <div className="flex flex-col gap-1.5 rounded-[18px] bg-[#FFF1DE] p-3">
-                <b className="font-title text-[15px] font-normal text-[#8A4B00]">
-                  한 번 더 생각해요
-                </b>
-                <Skeleton lines={3} tone="#F5DDB9" />
-              </div>
-            </div>
-          )}
-
-          {c.months && (
-            <div className="grid grid-cols-3 gap-1.5" aria-hidden="true">
-              {Array.from({ length: 12 }, (_, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col gap-1.5 rounded-2xl bg-[#FFF8FA] px-2 py-2.5"
-                >
-                  <div className="h-3.5 w-12 rounded bg-[#F6DCE5]" />
-                  <div className="h-3 w-full rounded bg-[#F6DCE5]" />
-                  <div className="h-3 w-2/3 rounded bg-[#F6DCE5]" />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {!c.pillars && <Skeleton lines={c.split || c.months ? 2 : 4} />}
-        </Sec>
-      ))}
+            );
+          })}
+        </div>
+        <P>{r.flow.summary}</P>
+      </Sec>
 
       <Sec className="bg-[#FFF7D6]">
         <Chap className="text-[#8A5A00]">콩닥 한마디</Chap>
-        <Skeleton lines={2} tone="#F3E3A6" />
+        <H className="text-[#5C3D00]">
+          {r.closing.title.map((line, i) => (
+            <span key={i} className="block">
+              {line}
+            </span>
+          ))}
+        </H>
         <div className="grid grid-cols-3 gap-2">
-          {["행운의 색", "행운의 방향", "행운의 시간"].map((l) => (
-            <div
-              key={l}
-              className="flex flex-col items-center gap-1.5 rounded-2xl bg-white px-1.5 py-3"
-            >
-              <div className="size-6 rounded-full bg-[#F6DCE5]" />
-              <span className="text-[11.5px] text-ink-sub">{l}</span>
-              <div className="h-3.5 w-10 rounded bg-[#F6DCE5]" />
+          {[
+            ["행운의 색", r.closing.luckyColor],
+            ["행운의 방향", r.closing.luckyDirection],
+            ["행운의 시간", r.closing.luckyTime],
+          ].map(([label, value]) => (
+            <div key={label} className="flex flex-col items-center gap-1 rounded-2xl bg-white px-1.5 py-2.5">
+              <span className="text-[11.5px] text-ink-sub">{label}</span>
+              <b className="font-title text-sm font-normal">{value}</b>
             </div>
           ))}
         </div>
+        <P className="text-[#6B4A2B]">{r.closing.tip}</P>
       </Sec>
 
       <Disclaimer>재미와 참고를 위한 콘텐츠예요.</Disclaimer>

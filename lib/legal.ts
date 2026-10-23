@@ -6,9 +6,9 @@ import { BUSINESS } from "./business";
  */
 export const LEGAL = {
   /** 시행일 (예: "2026년 11월 1일") */
-  effectiveDate: "",
+  effectiveDate: "2026년 10월 23일",
   /** Supabase 프로젝트 지역 (Supabase 대시보드 → Project Settings → General의 Region, 예: "대한민국(서울)") */
-  supabaseRegion: "",
+  supabaseRegion: "대한민국(서울)",
 };
 
 export const TBD = "(확인 후 기재 예정)";
