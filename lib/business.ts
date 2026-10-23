@@ -7,7 +7,7 @@ export const BUSINESS = {
   ceo: "정유리",
   registrationNumber: "722-12-02853",
   mailOrderNumber: "", // 통신판매업 신고번호
-  address: "경기도 광주시 역동 18로", // 상세 주소(동·호수)는 표시하지 않음
+  address: "경기도 광주시 역동5로 18", // 상세 주소(동·호수)는 표시하지 않음
   phone: "",
   email: "",
   hosting: "Vercel Inc.", // 호스팅 서비스 제공자
