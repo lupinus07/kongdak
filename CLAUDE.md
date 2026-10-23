@@ -19,7 +19,7 @@
 
 1. 메인(design/screens/01-Main4.html): 상단 "우리 사이, 콩닥콩닥할까?" + 타로 큰 카드 + 둘의 궁합·나의 연애운 카드 + 하단 탭바(홈·타로·궁합·연애운)
 2. 타로: 고민 선택 → 카드 뽑기 → 결과 → "그 사람과 궁합 보기"로 유료 전환
-3. 궁합/연애운: 입력 화면 → [990원 버튼] → 바텀시트(카카오 로그인 / 로그인 없이 결제) → 결제 화면(카카오페이·네이버페이·토스페이 큰 버튼 + 카드) → 결과
+3. 궁합/연애운: 입력 화면 → [990원 버튼] → 바텀시트(카카오 로그인 / 로그인 없이 결제) → 결제 화면(토스 결제위젯) → 결과
    - 결과는 비밀 링크(`?t=` = orders.access_token)로 연다. 회원·비회원 같음.
    - 비회원은 휴대폰 뒷자리 4자리를 받고, 결과 화면에서 '내 카톡으로 보내기·링크 복사'를 권한다. 잃어버리면 /find에서 주문번호(order_code) + 뒷자리로 다시 찾는다.
 4. 나의 연애운 입력에는 "지금 내 상황"(솔로·썸·연애 중·이별 후)을 받고, 상황별로 풀이 챕터를 다르게 만든다.
@@ -29,14 +29,14 @@
 - Next.js (App Router) + TypeScript + Tailwind, 웹 서비스 (앱스토어 인앱결제 안 함)
 - Supabase (DB, Auth, Storage) — 스키마: design/kongdak_schema.sql
 - 카카오 로그인: Supabase Auth의 Kakao provider
-- 결제: 포트원(PortOne) V2. PG는 포트원 채널 키로 연결해서, PG를 바꿔도 코드는 그대로 둔다 (lib/payment-methods.ts)
+- 결제: 토스페이먼츠 결제위젯 (결제수단 선택은 토스 위젯이 그림)
 - AI 풀이: Claude API (서버에서만 호출, 키는 클라이언트에 노출 금지)
 
 ## 보안 규칙
 
 - 모든 테이블 RLS 활성화.
-- orders, readings는 클라이언트 쓰기 금지. 포트원 서버에서 결제를 다시 조회해 PAID·금액을 확인한 뒤 서버(service_role)에서만 기록 (lib/payment-complete.ts, 결제 복귀·웹훅 공통).
-- SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, PORTONE_API_SECRET, PORTONE_WEBHOOK_SECRET은 NEXT_PUBLIC_ 접두어 금지.
+- orders, readings는 클라이언트 쓰기 금지. 토스 결제 승인(confirm) 전에 서버에서 주문 금액을 대조하고, 승인 성공 후 서버(service_role)에서만 기록 (lib/payment-complete.ts).
+- SUPABASE_SERVICE_ROLE_KEY, ANTHROPIC_API_KEY, TOSS_SECRET_KEY는 NEXT_PUBLIC_ 접두어 금지.
 - 결과 링크의 access_token은 화면·로그에 함부로 남기지 않는다 (링크를 가진 사람은 누구나 결과를 볼 수 있다).
 - 결제 금액은 클라이언트 값을 믿지 말고 서버에서 products 테이블 가격으로 검증.
 

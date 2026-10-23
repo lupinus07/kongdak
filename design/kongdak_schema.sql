@@ -93,12 +93,12 @@ create table public.orders (
   user_id         uuid references public.profiles (id) on delete restrict,  -- 비회원 주문이면 null
   phone_last4     text check (phone_last4 ~ '^[0-9]{4}$'),                  -- 비회원 본인 확인용 휴대폰 뒷자리
   product_code    text not null references public.products (code),
-  payment_id      text not null unique,       -- 우리가 만들어 포트원(PG)에 넘기는 결제 번호
+  payment_id      text not null unique,       -- 우리가 만들어 토스에 넘기는 주문번호(orderId)
   amount          integer not null,
   status          text not null default 'READY'
                   check (status in ('READY', 'DONE', 'CANCELED', 'REFUNDED', 'FAILED')),
-  pg_tx_id        text unique,                -- 결제 후 PG가 주는 거래 번호
-  pg_provider     text,                       -- 실제 처리한 PG
+  pg_tx_id        text unique,                -- 결제 후 토스가 주는 paymentKey
+  pg_provider     text,                       -- 결제대행사 (tosspayments)
   method          text,                       -- 카드, 간편결제(카카오페이 등)
   approved_at     timestamptz,
   canceled_at     timestamptz,

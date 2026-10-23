@@ -57,12 +57,15 @@ export async function fetchMyOrders(): Promise<MyOrder[] | null> {
   });
 }
 
-/** 저장된 결제수단 값(EASY_PAY:KAKAOPAY, CARD 등)을 화면용 이름으로 */
+/** 저장된 결제수단 값(EASY_PAY:토스페이, CARD 등)을 화면용 이름으로. 포트원 시절 값(KAKAOPAY 등)도 읽는다. */
 export function methodName(method: string | null): string {
-  const easy: Record<string, string> = { KAKAOPAY: "카카오페이", NAVERPAY: "네이버페이", TOSSPAY: "토스페이" };
+  const legacy: Record<string, string> = { KAKAOPAY: "카카오페이", NAVERPAY: "네이버페이", TOSSPAY: "토스페이" };
   if (!method) return "";
   if (method === "CARD") return "카드";
-  if (method.startsWith("EASY_PAY:")) return easy[method.slice(9)] ?? "간편결제";
+  if (method.startsWith("EASY_PAY:")) {
+    const provider = method.slice(9);
+    return legacy[provider] ?? (provider === "UNKNOWN" ? "간편결제" : provider);
+  }
   return "";
 }
 
