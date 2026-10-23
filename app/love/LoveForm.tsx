@@ -4,13 +4,20 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Segmented } from "@/components/Segmented";
 import { BirthDateInput, BirthTimeSelect } from "@/components/BirthFields";
-import { BenefitBox, BottomCta, ChipGroup, labelCls } from "@/components/form";
-import { isDraftReady, saveOrderDraft, type OrderDraft } from "@/lib/order-draft";
+import { BenefitBox, BottomCta, ChipGroup, inputCls, labelCls } from "@/components/form";
+import { isDraftReady, saveOrderDraft, WORRY_MAX, type OrderDraft } from "@/lib/order-draft";
 import { PRODUCTS } from "@/lib/products";
 
 const situations = ["솔로", "썸", "연애 중", "이별 후"] as const;
 const calendars = ["양력", "음력"] as const;
 const genders = ["여자", "남자"] as const;
+
+const worryExamples: Record<(typeof situations)[number], string> = {
+  솔로: "예) 소개팅을 받아볼까 고민돼요. 올해 인연이 들어올까요?",
+  썸: "예) 연락은 자주 하는데 고백은 안 해요. 제가 먼저 다가가도 될까요?",
+  "연애 중": "예) 요즘 서운한 일이 자주 생겨요. 오래 만나려면 어떻게 하면 좋을까요?",
+  "이별 후": "예) 헤어진 지 한 달인데 아직 생각나요. 마음을 어떻게 정리하면 좋을까요?",
+};
 
 export function LoveForm() {
   const router = useRouter();
@@ -19,8 +26,9 @@ export function LoveForm() {
   const [gender, setGender] = useState<(typeof genders)[number]>("여자");
   const [birth, setBirth] = useState("");
   const [time, setTime] = useState("");
+  const [worry, setWorry] = useState("");
 
-  const draft: OrderDraft = { product: "love", situation, calendar, birth, time, gender };
+  const draft: OrderDraft = { product: "love", situation, calendar, birth, time, gender, worry: worry.trim() || undefined };
 
   function onPreview() {
     if (!isDraftReady(draft)) {
@@ -57,6 +65,24 @@ export function LoveForm() {
         </p>
         <span className={labelCls}>성별</span>
         <Segmented label="성별" options={genders} value={gender} onChange={setGender} />
+        <label htmlFor="worry" className={labelCls}>
+          요즘 연애 고민 <span className="text-sm text-ink-sub">(선택)</span>
+        </label>
+        <textarea
+          id="worry"
+          rows={3}
+          maxLength={WORRY_MAX}
+          value={worry}
+          onChange={(e) => setWorry(e.target.value)}
+          placeholder={worryExamples[situation]}
+          className={`${inputCls} h-auto resize-none py-3 leading-normal`}
+        />
+        <p className="m-0 -mt-1 flex justify-between gap-2 text-xs text-ink-sub">
+          <span>적어 주면 내 고민에 맞춘 풀이를 함께 써 드려요. 이름·연락처는 적지 말아 주세요</span>
+          <span className="shrink-0">
+            {worry.length}/{WORRY_MAX}
+          </span>
+        </p>
       </div>
 
       <BottomCta

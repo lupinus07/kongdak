@@ -13,8 +13,13 @@ export type LoveDraft = {
   birth: string;
   time: string;
   gender: string;
+  /** 요즘 연애 고민 (선택). AI 풀이에 함께 넘긴다. */
+  worry?: string;
 };
 export type OrderDraft = CompatDraft | LoveDraft;
+
+/** 연애운 고민 입력 최대 길이. 화면과 서버(주문 만들 때)가 같이 쓴다. */
+export const WORRY_MAX = 200;
 
 /** 결제 전에 생년월일이 모두 제대로 입력됐는지 본다. 풀이 계산에 꼭 필요하다. */
 export function isDraftReady(d: OrderDraft): boolean {

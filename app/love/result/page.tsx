@@ -124,6 +124,19 @@ async function LoveResultBody({
         </div>
       </section>
 
+      {r.worryAnswer && input.worry && (
+        <Sec className="bg-[#FFF7D6]">
+          <Chap className="text-[#8A5A00]">내 고민 풀이</Chap>
+          <p className="m-0 rounded-2xl bg-white/70 px-3.5 py-3 text-[13.5px] leading-[1.65] text-[#6B4A2B]">“{input.worry}”</p>
+          <H className="text-[#5C3D00]">{r.worryAnswer.quote}</H>
+          {r.worryAnswer.paragraphs.map((p, i) => (
+            <P key={i} className="text-[#6B4A2B]">
+              {p}
+            </P>
+          ))}
+        </Sec>
+      )}
+
       <Sec>
         <Chap>CHAPTER 1</Chap>
         <H>나의 사주 원국</H>

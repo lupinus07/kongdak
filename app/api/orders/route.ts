@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { isDraftReady, type OrderDraft } from "@/lib/order-draft";
+import { isDraftReady, WORRY_MAX, type OrderDraft } from "@/lib/order-draft";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,6 +19,13 @@ export async function POST(request: Request) {
   }
   if (!isDraftReady(body!.input!)) {
     return NextResponse.json({ error: "생년월일을 정확히 입력해 주세요." }, { status: 400 });
+  }
+  const input = body!.input!;
+  // 고민은 직접 적는 글이라 길이를 서버에서 한 번 더 자른다
+  if (input.product === "love") {
+    const worry = typeof input.worry === "string" ? input.worry.trim().slice(0, WORRY_MAX) : "";
+    if (worry) input.worry = worry;
+    else delete input.worry;
   }
   const phoneLast4 = body?.phoneLast4 ?? "";
   if (!auth.user && !/^\d{4}$/.test(phoneLast4)) {
@@ -41,7 +48,7 @@ export async function POST(request: Request) {
     product_code: product.code,
     payment_id: paymentId,
     amount: product.price,
-    input: body!.input,
+    input,
   });
   if (error) return NextResponse.json({ error: "주문을 만들지 못했어요." }, { status: 500 });
 
