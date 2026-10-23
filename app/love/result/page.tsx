@@ -23,7 +23,12 @@ export const maxDuration = 300;
 function Waiting({ poll, saju, input }: { poll?: boolean; saju?: Saju; input?: { situation?: string; gender?: string } }) {
   return (
     <main className={`flex flex-1 flex-col gap-4 px-[18px] text-center ${saju ? "pb-8 pt-4" : "justify-center"}`}>
-      {poll ? <WaitingSteps /> : null}
+      {/* 스크롤해서 아래 미리보기를 읽는 동안에도 진행 상황이 보이도록 헤더 아래에 붙여 둔다 */}
+      {poll ? (
+        <div className="sticky top-[76px] z-10 -mx-[18px] bg-bg px-[18px] py-2">
+          <WaitingSteps />
+        </div>
+      ) : null}
       <p className="m-0 text-ink-sub">
         {poll ? "풀이를 정성껏 쓰는 중이에요. 1분 정도 걸릴 수 있어요." : "풀이를 만들고 있어요. 30초~1분 정도 걸릴 수 있어요…"}
         <br />
