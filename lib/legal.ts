@@ -9,8 +9,6 @@ export const LEGAL = {
   effectiveDate: "",
   /** Supabase 프로젝트 지역 (Supabase 대시보드 → Project Settings → General의 Region, 예: "대한민국(서울)") */
   supabaseRegion: "",
-  /** 포트원에 연결한 실제 PG사 (예: "주식회사 KG이니시스") */
-  pg: "",
 };
 
 export const TBD = "(확인 후 기재 예정)";

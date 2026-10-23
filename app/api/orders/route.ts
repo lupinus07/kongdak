@@ -45,5 +45,5 @@ export async function POST(request: Request) {
   });
   if (error) return NextResponse.json({ error: "주문을 만들지 못했어요." }, { status: 500 });
 
-  return NextResponse.json({ paymentId, orderName: product.name, amount: product.price });
+  return NextResponse.json({ orderId: paymentId, orderName: product.name, amount: product.price });
 }
