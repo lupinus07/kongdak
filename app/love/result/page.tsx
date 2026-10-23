@@ -6,12 +6,14 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { PollRefresh } from "@/components/PollRefresh";
 import { WaitingSteps } from "@/components/WaitingSteps";
 import { ResultLinkBox } from "@/components/ResultLinkBox";
+import { ReviewForm } from "@/components/ReviewForm";
 import { Chap, Disclaimer, H, Li, P, Sec } from "@/components/report";
 import { SajuCards } from "@/components/SajuCards";
 import { SajuChart } from "@/components/SajuChart";
 import { birthLabel } from "@/lib/birth";
 import { openLoveReading } from "@/lib/love-reading-server";
 import { loadPaidOrder } from "@/lib/orders-server";
+import { loadOrderReview } from "@/lib/reviews";
 import type { Saju } from "@/lib/saju";
 import { privateMetadata } from "@/lib/site";
 
@@ -98,6 +100,7 @@ async function LoveResultBody({
     );
   }
   const { saju, reading: r, input } = result;
+  const myReview = await loadOrderReview(order.id);
 
   return (
     <main className="flex flex-1 flex-col gap-3.5 px-[18px] pb-8 pt-2">
@@ -239,6 +242,9 @@ async function LoveResultBody({
         </div>
         <P className="text-[#6B4A2B]">{r.closing.tip}</P>
       </Sec>
+
+      {/* 다 읽은 뒤 맨 아래에서 후기를 받는다 */}
+      <ReviewForm product="love" done={myReview} />
 
       <Disclaimer>재미와 참고를 위한 콘텐츠예요.</Disclaimer>
     </main>
