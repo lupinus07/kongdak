@@ -1,12 +1,15 @@
 import { Hearts } from "@/components/icons/Heart";
 import { loadReviewSummary } from "@/lib/reviews";
 
+/** 후기가 이만큼 모이기 전에는 띠를 숨긴다 ("5.0 · 1개"처럼 보이면 오히려 믿음이 덜 가서) */
+const MIN_REVIEWS = 3;
+
 const PRODUCT_LABEL = { compat: "둘의 궁합", love: "나의 연애운" } as const;
 
-/** 메인 화면 궁합·연애운 카드 아래 후기 띠: 하트 평균 + 옆으로 넘겨 보는 최근 한 줄 후기. 후기가 없으면 그리지 않는다. */
+/** 메인 화면 궁합·연애운 카드 아래 후기 띠: 하트 평균 + 옆으로 넘겨 보는 최근 한 줄 후기. 후기가 MIN_REVIEWS개보다 적으면 그리지 않는다. */
 export async function ReviewStrip() {
   const { count, average, items } = await loadReviewSummary();
-  if (!count) return null;
+  if (count < MIN_REVIEWS) return null;
 
   return (
     <section className="flex flex-col gap-2.5 rounded-[26px] bg-white px-4 py-4 shadow-[0_8px_20px_rgba(194,37,92,0.08)]">
