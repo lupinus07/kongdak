@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/report";
 import { ShareSheet, type ShareContent } from "@/components/ShareSheet";
+import { loadKakao } from "@/lib/kakao-share";
 import { TAROT_CARDS } from "@/lib/tarot-cards";
 import { fetchInterpretation, type TarotInterpretation } from "@/lib/tarot-interpretation";
 import { TAROT_TOPICS, parseTopic } from "@/lib/tarot";
@@ -79,6 +80,22 @@ export function ResultClient() {
   }, [card, reversed, topicId, key, retry]);
 
   const r = loaded?.key === key ? loaded.r : undefined;
+
+  // 친구 공유를 누르면 바로 카톡이 열리도록 미리 준비한다.
+  // 카카오 SDK를 받아 두고, 카톡이 가져갈 공유 그림도 서버에서 먼저 만들어 캐시해 둔다(처음 만들 때 몇 초 걸린다).
+  useEffect(() => {
+    if (!card) return;
+    loadKakao();
+    const ogUrl = `${sharePath({ card: card.id, reversed, topic: topicId })}/opengraph-image`;
+    const warmed = `kongdak:og-warm:${ogUrl}`;
+    try {
+      if (sessionStorage.getItem(warmed)) return;
+      sessionStorage.setItem(warmed, "1");
+    } catch {
+      // 저장소를 못 쓰면 매번 미리 부른다
+    }
+    fetch(ogUrl, { priority: "low" }).catch(() => {});
+  }, [card, reversed, topicId]);
 
   // 공유 시트는 버튼을 누른 직후에만 열리므로, 풀이가 오면 저장용 이미지를 미리 만들어 둔다.
   useEffect(() => {

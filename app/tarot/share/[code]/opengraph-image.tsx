@@ -8,7 +8,10 @@ import { TAROT_CARDS } from "@/lib/tarot-cards";
 import { fetchInterpretation } from "@/lib/tarot-interpretation";
 import { parseShareCode } from "@/lib/tarot-share";
 
-/** 카톡·메신저에 공유 링크를 붙였을 때 뜨는 미리보기 그림(1200×630). 요청 때 만들고 캐시된다. */
+/**
+ * 카톡·메신저에 공유 링크를 붙였을 때 뜨는 미리보기 그림(1200×630). 요청 때 만든다.
+ * 만드는 데 몇 초 걸려서(폰트 받기·풀이 조회·그리기), 같은 카드 그림은 CDN에 오래 캐시해 두 번째부터는 바로 나가게 한다.
+ */
 
 export const alt = "친구가 뽑은 콩닥 타로 카드";
 export const size = { width: 1200, height: 630 };
@@ -38,7 +41,7 @@ export default async function Image({ params }: { params: Promise<{ code: string
       <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", background: "#FFF0F5", padding: "0 80px", fontFamily: "Jua", color: "#4A2B38" }}>
         {cardImage && (
           <div style={{ display: "flex", padding: 8, background: "#fff", border: "6px solid #FFD43B", borderRadius: 24, boxShadow: "0 16px 40px rgba(120,20,60,0.2)" }}>
-            <img src={cardImage} width={270} height={453} style={{ borderRadius: 14, transform: share!.reversed ? "rotate(180deg)" : "none" }} alt="" />
+            <img src={cardImage} width={270} height={453} style={{ borderRadius: 14, ...(share!.reversed ? { transform: "rotate(180deg)" } : {}) }} alt="" />
           </div>
         )}
         <div style={{ display: "flex", flexDirection: "column", marginLeft: 70, flex: 1 }}>
@@ -51,6 +54,11 @@ export default async function Image({ params }: { params: Promise<{ code: string
         </div>
       </div>
     ),
-    { ...size, fonts: [{ name: "Jua", data: font, weight: 400, style: "normal" }] },
+    {
+      ...size,
+      fonts: [{ name: "Jua", data: font, weight: 400, style: "normal" }],
+      // 링크 값(카드·고민·정역)이 같으면 그림도 같다. 풀이 문구를 고쳐도 하루 안에 새 그림으로 바뀐다.
+      headers: share ? { "Cache-Control": "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800" } : {},
+    },
   );
 }

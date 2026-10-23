@@ -66,8 +66,9 @@ export function ShareSheet({ content, onClose }: { content: ShareContent; onClos
     }
   }
 
-  function shareKakao() {
-    const kakao = getKakao();
+  async function shareKakao() {
+    // SDK를 아직 받는 중이면 끝날 때까지 기다린다(바로 기본 공유창으로 넘어가면 공유 모양이 달라진다)
+    const kakao = getKakao() ?? (await loadKakao());
     if (!kakao) {
       // 카카오 키가 없거나 SDK를 못 불러오면 기본 공유창(없으면 링크 복사)으로 대신한다
       return canNativeShare ? nativeShare() : copy();
