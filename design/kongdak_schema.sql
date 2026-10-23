@@ -64,7 +64,7 @@ create trigger on_auth_user_created
 
 
 -- ---------------------------------------------------------
--- 2. 상품 (products) — 궁합 990원, 나의 연애운 990원
+-- 2. 상품 (products) — 궁합 1,980원, 나의 연애운 990원
 -- ---------------------------------------------------------
 create table public.products (
   code        text primary key,               -- 'compat', 'love'
@@ -80,7 +80,7 @@ create policy "상품은 누구나 조회"
   using (true);
 
 insert into public.products (code, name, price) values
-  ('compat', '우리 궁합 풀이', 990),
+  ('compat', '우리 궁합 풀이', 1980),
   ('love',   '나의 연애운',   990);
 
 

@@ -7,7 +7,7 @@ import { isDraftReady, loadOrderDraft, type LoveDraft } from "@/lib/order-draft"
 import { SajuPreview } from "../SajuPreview";
 import type { Situation } from "@/lib/saju-reading";
 
-/** 입력 화면에서 넘어온 입력값(브라우저 저장소)으로 무료 미리보기를 그리고, 하단에 990원 결제 버튼을 고정한다. */
+/** 입력 화면에서 넘어온 입력값(브라우저 저장소)으로 무료 미리보기를 그리고, 하단에 결제 버튼을 고정한다. */
 export function LovePreview() {
   const [draft, setDraft] = useState<LoveDraft | null | undefined>(undefined);
 

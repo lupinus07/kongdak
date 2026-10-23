@@ -68,7 +68,7 @@ export function BottomCta({
   product: Product;
   draft: OrderDraft;
   payLabel: string;
-  /** 있으면 990원 결제 버튼 대신 이 버튼을 보여 준다 (결제 전 무료 미리보기로 보내는 버튼 등) */
+  /** 있으면 결제 버튼 대신 이 버튼을 보여 준다 (결제 전 무료 미리보기로 보내는 버튼 등) */
   action?: ReactNode;
   /** 스크롤해도 화면 아래에 붙어 있게 한다 */
   sticky?: boolean;

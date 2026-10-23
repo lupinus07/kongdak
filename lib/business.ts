@@ -8,7 +8,7 @@ export const BUSINESS = {
   registrationNumber: "722-12-02853",
   mailOrderNumber: "", // 통신판매업 신고번호
   address: "경기도 광주시 역동5로 18", // 상세 주소(동·호수)는 표시하지 않음
-  phone: "",
-  email: "",
+  phone: "010-9331-2248",
+  email: "lupinus07@hanmail.net",
   hosting: "Vercel Inc.", // 호스팅 서비스 제공자
 };

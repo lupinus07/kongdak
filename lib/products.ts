@@ -8,7 +8,7 @@ export const PRODUCTS: Record<
   compat: {
     name: "우리 궁합 풀이",
     benefits: ["콩닥지수 (궁합 점수)", "잘 맞는 점", "조심할 점", "더 가까워지는 팁"],
-    price: 990,
+    price: 1980,
     sampleHref: "/compat/sample",
     sampleLabel: "샘플 궁합 먼저 보기 ›",
     resultHref: "/compat/result",

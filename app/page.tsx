@@ -5,6 +5,7 @@ import { MenuButton } from "@/components/MenuButton";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { BusinessFooter } from "@/components/BusinessFooter";
 import { TabBar } from "@/components/TabBar";
+import { PRODUCTS } from "@/lib/products";
 
 export const metadata = { alternates: { canonical: "/" } };
 
@@ -76,7 +77,7 @@ export default function Home() {
               <br />
               얼마나 잘 맞을까?
             </span>
-            <span className={priceBadge}>990원</span>
+            <span className={priceBadge}>{PRODUCTS.compat.price.toLocaleString()}원</span>
           </Link>
           <Link href="/love" className={miniCard}>
             <SoloSparkle />
@@ -86,7 +87,7 @@ export default function Home() {
               <br />
               어떻게 흘러갈까?
             </span>
-            <span className={priceBadge}>990원</span>
+            <span className={priceBadge}>{PRODUCTS.love.price.toLocaleString()}원</span>
           </Link>
         </div>
       </main>
