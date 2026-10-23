@@ -20,16 +20,15 @@ export const metadata = privateMetadata("나의 연애운 결과");
 // AI 풀이를 처음 열 때 만들기 때문에 시간이 걸릴 수 있다(응답 뒤 after()에서 이어서 만든다)
 export const maxDuration = 300;
 
-function Waiting({ poll, saju }: { poll?: boolean; saju?: Saju }) {
+function Waiting({ poll, saju, input }: { poll?: boolean; saju?: Saju; input?: { situation?: string; gender?: string } }) {
   return (
-    <main className="flex flex-1 flex-col justify-center gap-4 px-[18px] text-center">
-      {saju && (
-        <Sec className="text-left">
-          <Chap>나의 사주 원국</Chap>
-          <SajuChart saju={saju} />
-        </Sec>
-      )}
-      {poll ? <WaitingSteps /> : null}
+    <main className={`flex flex-1 flex-col gap-4 px-[18px] text-center ${saju ? "pb-8 pt-4" : "justify-center"}`}>
+      {/* 스크롤해서 아래 미리보기를 읽는 동안에도 진행 상황이 보이도록 헤더 아래에 붙여 둔다 */}
+      {poll ? (
+        <div className="sticky top-[76px] z-10 -mx-[18px] bg-bg px-[18px] py-2">
+          <WaitingSteps />
+        </div>
+      ) : null}
       <p className="m-0 text-ink-sub">
         {poll ? "풀이를 정성껏 쓰는 중이에요. 1분 정도 걸릴 수 있어요." : "풀이를 만들고 있어요. 30초~1분 정도 걸릴 수 있어요…"}
         <br />
@@ -38,6 +37,14 @@ function Waiting({ poll, saju }: { poll?: boolean; saju?: Saju }) {
       <Suspense fallback={null}>
         <ResultLinkBox product="love" waiting />
       </Suspense>
+      {/* 진행 상황은 위에 두고, 기다리는 동안 읽을 수 있게 결제 전 미리보기와 같은 내용을 아래에 보여준다 */}
+      {saju && (
+        <Sec className="text-left">
+          <Chap>나의 사주 원국</Chap>
+          <SajuChart saju={saju} />
+          <SajuCards saju={saju} situation={input?.situation} gender={input?.gender} />
+        </Sec>
+      )}
       {poll && <PollRefresh />}
     </main>
   );
@@ -87,7 +94,7 @@ async function LoveResultBody({
     return result.reason === "no-birth" ? (
       <Notice>생년월일 정보가 없는 주문이라 사주를 계산할 수 없어요.</Notice>
     ) : (
-      <Waiting poll saju={result.saju} />
+      <Waiting poll saju={result.saju} input={order.input} />
     );
   }
   const { saju, reading: r, input } = result;
