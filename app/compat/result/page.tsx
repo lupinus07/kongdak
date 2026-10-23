@@ -1,110 +1,118 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
+import { CompatReport, type CompatPerson } from "@/components/CompatReport";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { PollRefresh } from "@/components/PollRefresh";
 import { ResultLinkBox } from "@/components/ResultLinkBox";
-import { Disclaimer, Skeleton } from "@/components/report";
+import { ReviewForm } from "@/components/ReviewForm";
+import { Chap, Disclaimer, Sec } from "@/components/report";
+import { SajuChart } from "@/components/SajuChart";
+import { COMPAT_STEPS, WaitingSteps } from "@/components/WaitingSteps";
+import { birthLabel } from "@/lib/birth";
+import { openCompatReading, type CompatSide } from "@/lib/compat-reading-server";
+import { loadPaidOrder } from "@/lib/orders-server";
+import { loadOrderReview } from "@/lib/reviews";
 import { privateMetadata } from "@/lib/site";
 
 export const metadata = privateMetadata("우리의 궁합");
 
-const CARDS = [
-  { title: "잘 맞는 점", bg: "#FFE3EC", stroke: "#C2255C", icon: "M5 12l5 5L20 7" },
-  { title: "살짝 조심할 점", bg: "#FFF1DE", stroke: "#C25A00", icon: "M12 7v6M12 17v.5" },
-  {
-    title: "더 가까워지는 팁",
-    bg: "#E3F4E1",
-    stroke: "#2B6B2A",
-    icon: "M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z",
-  },
-];
+// AI 풀이를 처음 열 때 만들기 때문에 시간이 걸릴 수 있다(응답 뒤 after()에서 이어서 만든다)
+export const maxDuration = 300;
 
-// TODO: ?t= 결과 링크로 주문을 확인하고(lib/orders-server.ts) readings에서 풀이를 불러온다. 지금은 레이아웃만 보여준다.
-export default function CompatResultPage() {
+const person = (s: CompatSide): CompatPerson => ({ label: s.label, saju: s.saju, dateLabel: birthLabel(s.birth, "양력", s.time) });
+
+function Waiting({ poll, people }: { poll?: boolean; people?: [CompatSide, CompatSide] }) {
+  return (
+    <main className={`flex flex-1 flex-col gap-4 px-[18px] text-center ${people ? "pb-8 pt-4" : "justify-center"}`}>
+      {/* 스크롤해서 아래 원국을 보는 동안에도 진행 상황이 보이도록 헤더 아래에 붙여 둔다 */}
+      {poll ? (
+        <div className="sticky top-[76px] z-10 -mx-[18px] bg-bg px-[18px] py-2">
+          <WaitingSteps steps={COMPAT_STEPS} />
+        </div>
+      ) : null}
+      {poll ? (
+        <>
+          <p className="m-0 text-ink-sub">
+            두 사람의 궁합을 정성껏 쓰는 중이에요. 1분 정도 걸릴 수 있어요.
+            <br />
+            결제는 끝났으니 나가도 괜찮아요.
+          </p>
+          <Suspense fallback={null}>
+            <ResultLinkBox product="compat" waiting />
+          </Suspense>
+        </>
+      ) : (
+        <p className="m-0 text-ink-sub">풀이를 불러오고 있어요…</p>
+      )}
+      {/* 기다리는 동안 두 사람의 원국(만세력 계산, AI 아님)을 먼저 보여준다 */}
+      {people?.map((p) => (
+        <Sec key={p.label} className="text-left">
+          <Chap>
+            {p.label}의 사주 원국 · {birthLabel(p.birth, "양력", p.time)}
+          </Chap>
+          <SajuChart saju={p.saju} dayLabel={`일주 · ${p.label}`} />
+        </Sec>
+      ))}
+      {poll && <PollRefresh />}
+    </main>
+  );
+}
+
+function Notice({ children }: { children: React.ReactNode }) {
+  return (
+    <main className="flex flex-1 flex-col items-center justify-center gap-4 px-[22px] text-center">
+      <p className="m-0 text-ink-sub">{children}</p>
+      <Link href="/compat" className="rounded-[28px] bg-brand px-6 py-3 font-title text-white no-underline">
+        둘의 궁합 보러 가기
+      </Link>
+    </main>
+  );
+}
+
+export default function CompatResultPage({ searchParams }: { searchParams: Promise<{ t?: string }> }) {
   return (
     <PhoneFrame>
       <BackHeader title="우리의 궁합" href="/" />
-      <main className="flex flex-1 flex-col gap-4 px-[22px] pb-6 pt-2">
-        <Suspense>
-          <ResultLinkBox product="compat" />
-        </Suspense>
-        <section className="flex flex-col items-center gap-2.5 rounded-[32px] bg-white px-5 py-[22px] shadow-[0_8px_24px_rgba(194,37,92,0.10)]">
-          <div className="relative size-[168px]">
-            <svg width="168" height="168" viewBox="0 0 168 168" aria-hidden="true">
-              <circle cx="84" cy="84" r="70" fill="none" stroke="#FFE3EC" strokeWidth="16" />
-              <circle
-                cx="84"
-                cy="84"
-                r="70"
-                fill="none"
-                stroke="#FF6B9A"
-                strokeWidth="16"
-                strokeLinecap="round"
-                strokeDasharray="383 440"
-                transform="rotate(-90 84 84)"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[14px] text-ink-sub">콩닥지수</span>
-              <span className="font-title text-[52px] leading-none text-brand">
-                87<span className="text-2xl">%</span>
-              </span>
-            </div>
-          </div>
-          <div className="flex w-full flex-col items-center gap-2" aria-hidden="true">
-            <div className="h-6 w-3/4 rounded-lg bg-[#F6DCE5]" />
-            <div className="h-6 w-1/2 rounded-lg bg-[#F6DCE5]" />
-          </div>
-          <div className="flex gap-1.5" aria-hidden="true">
-            {[0, 1, 2].map((i) => (
-              <span key={i} className="h-7 w-20 rounded-[14px] bg-bg" />
-            ))}
-          </div>
-        </section>
-
-        <div className="flex flex-col gap-2.5">
-          {CARDS.map((c) => (
-            <div key={c.title} className="flex items-start gap-3 rounded-[22px] bg-white px-4 py-3.5">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full" style={{ background: c.bg }}>
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke={c.stroke}
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d={c.icon} />
-                </svg>
-              </div>
-              <div className="flex flex-1 flex-col gap-2">
-                <span className="font-title text-base">{c.title}</span>
-                <Skeleton lines={3} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <Disclaimer>재미와 참고를 위한 콘텐츠예요.</Disclaimer>
-
-        <div className="mt-auto flex gap-2.5">
-          <button
-            type="button"
-            className="h-14 flex-1 rounded-[28px] border-2 border-brand bg-white font-title text-[17px] text-brand"
-          >
-            공유하기
-          </button>
-          <Link
-            href="/"
-            className="flex h-14 flex-[1.4] items-center justify-center rounded-[28px] bg-brand font-title text-[17px] text-white no-underline"
-          >
-            홈으로
-          </Link>
-        </div>
-      </main>
+      <Suspense fallback={<Waiting />}>
+        <CompatResultBody searchParams={searchParams} />
+      </Suspense>
     </PhoneFrame>
+  );
+}
+
+async function CompatResultBody({ searchParams }: { searchParams: Promise<{ t?: string }> }) {
+  // 결제 후 요청마다 달라지는 화면이라 미리 그리지 않고, 요청 때 처리한다
+  await connection();
+  const { t } = await searchParams;
+  const order = await loadPaidOrder(t, "compat");
+  if (!order) return <Notice>결제한 풀이를 찾지 못했어요.</Notice>;
+  const result = await openCompatReading(order.id, order.input);
+  if (!result.ok) {
+    return result.reason === "no-birth" ? (
+      <Notice>생년월일 정보가 없는 주문이라 궁합을 계산할 수 없어요.</Notice>
+    ) : (
+      <Waiting poll people={[result.me, result.you]} />
+    );
+  }
+  const myReview = await loadOrderReview(order.id);
+
+  return (
+    <main className="flex flex-1 flex-col gap-3.5 px-[18px] pb-8 pt-2">
+      <ResultLinkBox product="compat" orderCode={order.orderCode} />
+      <CompatReport
+        me={person(result.me)}
+        you={person(result.you)}
+        relation={result.relation}
+        score={result.score}
+        reading={result.reading}
+      />
+
+      {/* 다 읽은 뒤 맨 아래에서 후기를 받는다 */}
+      <ReviewForm product="compat" done={myReview} />
+
+      <Disclaimer>재미와 참고를 위한 콘텐츠예요.</Disclaimer>
+    </main>
   );
 }
