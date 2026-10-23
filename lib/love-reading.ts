@@ -5,7 +5,7 @@ import type { LoveFacts } from "./saju-facts";
 
 /** 나의 연애운 AI 풀이. 서버에서만 호출한다(ANTHROPIC_API_KEY는 클라이언트에 노출 금지). */
 
-export const LOVE_MODEL = "claude-sonnet-5-5";
+export const LOVE_MODEL = "claude-opus-5-5";
 
 const Chapter = z.object({
   /** 챕터 제목 아래 따옴표 문구. 예: 마음이 가면 숨기지 못해요 */

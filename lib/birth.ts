@@ -22,6 +22,13 @@ export function formatBirthDate(raw: string): string {
   return `${d.slice(0, 4)}.${d.slice(4, 6)}.${d.slice(6)}`;
 }
 
+/** 결과 화면 상단용: "1988년 12월 7일 자시 (양력)". 시간을 모르면 시진을 뺀다. */
+export function birthLabel(birth: string, calendar = "양력", time = ""): string {
+  const [y, m, d] = birth.split(".").map(Number);
+  const shijin = time !== "" ? SHIJIN[Number(time)]?.name : undefined;
+  return `${y}년 ${m}월 ${d}일${shijin ? ` ${shijin}` : ""} (${calendar})`;
+}
+
 /** 8자리가 다 입력됐을 때만 판단한다. 비어 있거나 입력 중이면 "pending". */
 export function checkBirthDate(value: string): "pending" | "ok" | "invalid" {
   const m = /^(\d{4})\.(\d{2})\.(\d{2})$/.exec(value);

@@ -6,6 +6,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { ResultLinkBox } from "@/components/ResultLinkBox";
 import { Chap, Disclaimer, H, Li, P, Sec } from "@/components/report";
 import { SajuChart } from "@/components/SajuChart";
+import { birthLabel } from "@/lib/birth";
 import { openLoveReading } from "@/lib/love-reading-server";
 import { loadPaidOrder } from "@/lib/orders-server";
 import { privateMetadata } from "@/lib/site";
@@ -14,6 +15,21 @@ export const metadata = privateMetadata("나의 연애운 결과");
 
 // AI 풀이를 처음 열 때 만들기 때문에 시간이 걸릴 수 있다
 export const maxDuration = 300;
+
+function Waiting() {
+  return (
+    <main className="flex flex-1 flex-col justify-center gap-4 px-[18px] text-center">
+      <p className="m-0 text-ink-sub">
+        풀이를 만들고 있어요. 30초~1분 정도 걸릴 수 있어요…
+        <br />
+        결제는 끝났으니 나가도 괜찮아요.
+      </p>
+      <Suspense fallback={null}>
+        <ResultLinkBox product="love" waiting />
+      </Suspense>
+    </main>
+  );
+}
 
 function Notice({ children }: { children: React.ReactNode }) {
   return (
@@ -37,7 +53,7 @@ export default function LoveResultPage({
   return (
     <PhoneFrame>
       <BackHeader title="나의 연애운" href="/" />
-      <Suspense fallback={<Notice>풀이를 만들고 있어요. 30초~1분 정도 걸릴 수 있어요…</Notice>}>
+      <Suspense fallback={<Waiting />}>
         <LoveResultBody searchParams={searchParams} />
       </Suspense>
     </PhoneFrame>
@@ -66,12 +82,13 @@ async function LoveResultBody({
       </Notice>
     );
   }
-  const { saju, reading: r } = result;
+  const { saju, reading: r, input } = result;
 
   return (
     <main className="flex flex-1 flex-col gap-3.5 px-[18px] pb-8 pt-2">
       <ResultLinkBox product="love" orderCode={order.orderCode} />
       <section className="flex flex-col gap-2 rounded-[30px] bg-brand px-5 py-6 text-white">
+        <span className="text-[13px] text-[#FFE3EC]">{birthLabel(input.birth ?? "", input.calendar, input.time)}</span>
         <h1 className="m-0 font-title text-[28px] font-normal leading-[1.3]">
           {r.hero.title.map((line, i) => (
             <span key={i} className="block">

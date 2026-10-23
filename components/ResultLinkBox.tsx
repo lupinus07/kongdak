@@ -10,7 +10,16 @@ import { PRODUCTS, type Product } from "@/lib/products";
  * 결제한 풀이의 결과 링크 안내. 비회원은 이 링크로만 결과를 다시 열 수 있어서
  * 내 카톡으로 보내기·링크 복사를 권하고, 이 브라우저에도 기억해 둔다.
  */
-export function ResultLinkBox({ product, orderCode }: { product: Product; orderCode?: string }) {
+export function ResultLinkBox({
+  product,
+  orderCode,
+  waiting,
+}: {
+  product: Product;
+  orderCode?: string;
+  /** 풀이를 만드는 중에 보여주는 모드: 나가도 이 링크로 다시 볼 수 있다고 안내한다 */
+  waiting?: boolean;
+}) {
   const token = useSearchParams().get("t");
   const [copied, setCopied] = useState(false);
 
@@ -62,7 +71,9 @@ export function ResultLinkBox({ product, orderCode }: { product: Product; orderC
   return (
     <section className="flex flex-col gap-2.5 rounded-[24px] border-2 border-dashed border-[#F3B6CB] bg-white px-4 py-3.5">
       <div className="flex items-center justify-between gap-2">
-        <b className="font-title text-[15px] font-normal text-brand">이 풀이는 링크로 다시 볼 수 있어요</b>
+        <b className="font-title text-[15px] font-normal text-brand">
+          {waiting ? "기다리기 어렵다면 링크를 먼저 저장해 두세요" : "이 풀이는 링크로 다시 볼 수 있어요"}
+        </b>
         {orderCode && <span className="shrink-0 text-xs text-ink-sub">주문번호 {orderCode}</span>}
       </div>
       <p className="m-0 text-xs leading-relaxed text-ink-sub">
