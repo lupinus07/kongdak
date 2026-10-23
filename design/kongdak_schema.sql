@@ -134,6 +134,7 @@ create table public.readings (
   saju            jsonb,                      -- 계산한 사주 원국 (년월일시 간지 등)
   result          jsonb,                      -- AI가 만든 풀이 (챕터별)
   opened_at       timestamptz,                -- null이면 아직 안 열어봄
+  generating_at   timestamptz,                -- 풀이 생성을 시작한 시각 (중복 생성 방지용 잠금)
   created_at      timestamptz not null default now()
 );
 

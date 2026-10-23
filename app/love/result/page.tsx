@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { PollRefresh } from "@/components/PollRefresh";
 import { ResultLinkBox } from "@/components/ResultLinkBox";
 import { Chap, Disclaimer, H, Li, P, Sec } from "@/components/report";
 import { SajuChart } from "@/components/SajuChart";
@@ -13,10 +14,10 @@ import { privateMetadata } from "@/lib/site";
 
 export const metadata = privateMetadata("나의 연애운 결과");
 
-// AI 풀이를 처음 열 때 만들기 때문에 시간이 걸릴 수 있다
+// AI 풀이를 처음 열 때 만들기 때문에 시간이 걸릴 수 있다(응답 뒤 after()에서 이어서 만든다)
 export const maxDuration = 300;
 
-function Waiting() {
+function Waiting({ poll }: { poll?: boolean }) {
   return (
     <main className="flex flex-1 flex-col justify-center gap-4 px-[18px] text-center">
       <p className="m-0 text-ink-sub">
@@ -27,6 +28,7 @@ function Waiting() {
       <Suspense fallback={null}>
         <ResultLinkBox product="love" waiting />
       </Suspense>
+      {poll && <PollRefresh />}
     </main>
   );
 }
@@ -75,11 +77,7 @@ async function LoveResultBody({
     return result.reason === "no-birth" ? (
       <Notice>생년월일 정보가 없는 주문이라 사주를 계산할 수 없어요.</Notice>
     ) : (
-      <Notice>
-        풀이를 만들지 못했어요. 잠시 후 이 페이지를 새로고침해 주세요.
-        <br />
-        계속 안 되면 문의해 주세요. 풀이를 열지 못한 경우에는 환불해 드려요.
-      </Notice>
+      <Waiting poll />
     );
   }
   const { saju, reading: r, input } = result;
