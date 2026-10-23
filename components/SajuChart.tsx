@@ -19,7 +19,7 @@ const BAR: Record<Element, { name: string; color: string }> = {
 const TITLE = { hour: "시주", day: "일주 · 나", month: "월주", year: "년주" } as const;
 
 function Tg({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <span className={`text-[11.5px] text-ink-sub ${className}`}>{children}</span>;
+  return <span className={`text-[12.5px] text-ink-sub ${className}`}>{children}</span>;
 }
 
 function Chip({ glyph, reading, el, ring }: { glyph: string; reading: string; el: Element; ring?: boolean }) {
@@ -30,7 +30,7 @@ function Chip({ glyph, reading, el, ring }: { glyph: string; reading: string; el
       }`}
     >
       {glyph}
-      <small className="mt-[3px] font-body text-[10.5px]">{reading}</small>
+      <small className="mt-[3px] font-body text-[11.5px]">{reading}</small>
     </div>
   );
 }
@@ -61,7 +61,7 @@ export function SajuChart({ saju }: { saju: Saju }) {
       </div>
       <div className="mt-1.5 flex flex-col gap-[7px]">
         {bars.map((el) => (
-          <div key={el} className="grid grid-cols-[52px_1fr_28px] items-center gap-2 text-[13px]">
+          <div key={el} className="grid grid-cols-[52px_1fr_28px] items-center gap-2 text-[14px]">
             <span>{BAR[el].name}</span>
             <div className="h-3 overflow-hidden rounded-md bg-bg">
               <div

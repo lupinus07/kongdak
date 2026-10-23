@@ -16,7 +16,7 @@ export function LoginForm() {
         required
         className="h-12 rounded-2xl border-2 border-[#F3C6D6] bg-white px-4 text-[16px] outline-none focus:border-brand"
       />
-      {state.error && <p className="m-0 text-[13px] text-brand">{state.error}</p>}
+      {state.error && <p className="m-0 text-[14px] text-brand">{state.error}</p>}
       <button
         type="submit"
         disabled={pending}

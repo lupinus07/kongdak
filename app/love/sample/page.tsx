@@ -72,7 +72,7 @@ const stroke = {
 };
 
 function Tg({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <span className={`text-[11.5px] text-ink-sub ${className}`}>{children}</span>;
+  return <span className={`text-[12.5px] text-ink-sub ${className}`}>{children}</span>;
 }
 
 function Chip({ glyph, reading, el, ring }: { glyph: string; reading: string; el: Element; ring?: boolean }) {
@@ -83,7 +83,7 @@ function Chip({ glyph, reading, el, ring }: { glyph: string; reading: string; el
       }`}
     >
       {glyph}
-      <small className="mt-[3px] font-body text-[10.5px]">{reading}</small>
+      <small className="mt-[3px] font-body text-[11.5px]">{reading}</small>
     </div>
   );
 }
@@ -92,7 +92,7 @@ function Lucky({ label, value, children }: { label: string; value: string; child
   return (
     <div className="flex flex-col items-center gap-1 rounded-2xl bg-white px-1.5 py-2.5">
       {children}
-      <span className="text-[11.5px] text-ink-sub">{label}</span>
+      <span className="text-[12.5px] text-ink-sub">{label}</span>
       <b className="font-title text-sm font-normal">{value}</b>
     </div>
   );
@@ -101,23 +101,23 @@ function Lucky({ label, value, children }: { label: string; value: string; child
 export default function LoveSamplePage() {
   return (
     <PhoneFrame>
-      <BackHeader href="/love" center={<span className="rounded-[14px] bg-badge px-3.5 py-1.5 text-[13px] text-[#5C3D00]">샘플 풀이</span>} />
+      <BackHeader href="/love" center={<span className="rounded-[14px] bg-badge px-3.5 py-1.5 text-[14px] text-[#5C3D00]">샘플 풀이</span>} />
       <main className="flex flex-1 flex-col gap-3.5 px-[18px] pb-8 pt-2">
 
         <section className="flex flex-col gap-2 rounded-[30px] bg-brand px-5 py-6 text-white">
-          <span className="text-[13px] text-[#FFE3EC]">박윤희 님 · 1988년 12월 7일 자시 (양력)</span>
+          <span className="text-[14px] text-[#FFE3EC]">박윤희 님 · 1988년 12월 7일 자시 (양력)</span>
           <h1 className="m-0 font-title text-[28px] font-normal leading-[1.3]">
             겨울 바다 위에 뜬
             <br />
             따뜻한 태양
           </h1>
-          <p className="m-0 text-[14.5px] leading-[1.7] text-[#FFE3EC]">
+          <p className="m-0 text-[15px] leading-[1.7] text-[#FFE3EC]">
             차가운 물 기운 속에서 혼자 반짝이는 불, 그래서 더 눈에 띄고 더 많이 사랑받는 사주예요. 다만 태양이 지치지 않게
             지켜줄 사람이 필요해요.
           </p>
           <div className="mt-1 flex flex-wrap gap-1.5">
             {["이성운_강함", "챙겨주는_연애", "내_편이_필요해"].map((t) => (
-              <span key={t} className="rounded-xl bg-white/20 px-[11px] py-[5px] text-[12.5px]">
+              <span key={t} className="rounded-xl bg-white/20 px-[11px] py-[5px] text-[13.5px]">
                 #{t}
               </span>
             ))}
@@ -140,7 +140,7 @@ export default function LoveSamplePage() {
           </div>
           <div className="mt-1.5 flex flex-col gap-[7px]">
             {BALANCE.map((b) => (
-              <div key={b.name} className="grid grid-cols-[44px_1fr_28px] items-center gap-2 text-[13px]">
+              <div key={b.name} className="grid grid-cols-[44px_1fr_28px] items-center gap-2 text-[14px]">
                 <span>{b.name}</span>
                 <div className="h-3 overflow-hidden rounded-md bg-bg">
                   <div className="h-full" style={{ width: `${b.width}%`, background: b.color }} />
@@ -220,13 +220,13 @@ export default function LoveSamplePage() {
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1 rounded-[18px] bg-[#E3F4E1] p-3">
               <b className="font-title text-[15px] font-normal text-[#2B6B2A]">잘 맞아요</b>
-              <span className="text-[13px] leading-[1.55] text-[#335C32]">
+              <span className="text-[14px] leading-[1.55] text-[#335C32]">
                 말을 끝까지 들어주는 사람, 공부·성장을 좋아하는 사람, 갑목·을목 일간이나 木 기운이 강한 사람
               </span>
             </div>
             <div className="flex flex-col gap-1 rounded-[18px] bg-[#FFF1DE] p-3">
               <b className="font-title text-[15px] font-normal text-[#8A4B00]">한 번 더 생각해요</b>
-              <span className="text-[13px] leading-[1.55] text-[#6B4A2B]">
+              <span className="text-[14px] leading-[1.55] text-[#6B4A2B]">
                 통제하려는 사람, 감정 기복이 큰 사람, 물 기운이 지나치게 강해 나를 더 지치게 하는 관계
               </span>
             </div>
@@ -252,14 +252,14 @@ export default function LoveSamplePage() {
         <Sec>
           <Chap>CHAPTER 7</Chap>
           <H>다가오는 1년 연애 흐름</H>
-          <P className="!text-[13px] text-[#5E3F4C]">절기 기준 · 하트가 많을수록 인연 기운이 강한 달</P>
+          <P className="!text-[14px] text-[#5E3F4C]">절기 기준 · 하트가 많을수록 인연 기운이 강한 달</P>
           <div className="grid grid-cols-3 gap-1.5">
             {MONTHS.map((m) => (
               <div key={m.ym} className={`flex flex-col gap-[3px] rounded-2xl px-2 py-2.5 ${MONTH_BG[m.tone]}`}>
                 <b className="font-title text-[15px] font-normal text-ink">
                   {m.ym} {m.mark}
                 </b>
-                <span className="text-[11.5px] leading-[1.4] text-[#6B4A58]">{m.text}</span>
+                <span className="text-[12.5px] leading-[1.4] text-[#6B4A58]">{m.text}</span>
               </div>
             ))}
           </div>

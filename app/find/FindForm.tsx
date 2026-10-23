@@ -56,7 +56,7 @@ export function FindForm() {
           placeholder="결제할 때 입력한 번호"
           className={inputCls}
         />
-        {error && <p className="m-0 text-[13px] text-brand">{error}</p>}
+        {error && <p className="m-0 text-[14px] text-brand">{error}</p>}
       </div>
       <p className="m-0 px-1 text-xs leading-relaxed text-ink-mute">
         주문번호는 결과 화면 위쪽에 있어요. 주문번호도 모른다면 고객센터로 결제일과 결제수단을 알려 주세요.

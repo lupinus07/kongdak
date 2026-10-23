@@ -26,9 +26,9 @@ function Card({ title, children }: { title: string; children: ReactNode }) {
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="flex flex-col gap-0.5 rounded-2xl bg-[#FFF8FA] px-4 py-3">
-      <span className="text-[12.5px] text-ink-sub">{label}</span>
+      <span className="text-[13.5px] text-ink-sub">{label}</span>
       <b className="font-title text-[22px] font-normal text-ink">{value}</b>
-      {sub && <span className="text-[12px] text-ink-mute">{sub}</span>}
+      {sub && <span className="text-[13px] text-ink-mute">{sub}</span>}
     </div>
   );
 }
@@ -46,13 +46,13 @@ export function Dashboard({ stats }: { stats: AdminStats }) {
       <header className="flex items-center justify-between">
         <div>
           <h1 className="m-0 font-title text-[26px] font-normal text-ink">콩닥 대시보드</h1>
-          <p className="m-0 text-[12.5px] text-ink-mute">
+          <p className="m-0 text-[13.5px] text-ink-mute">
             {formatAt(stats.generatedAt)} 기준 · 보기 전용
             {stats.truncated && " · 주문이 많아 최근 5,000건만 집계했어요"}
           </p>
         </div>
         <form action={logoutAction}>
-          <button type="submit" className="rounded-2xl border border-[#F3C6D6] bg-white px-3.5 py-2 text-[13px] text-ink-sub">
+          <button type="submit" className="rounded-2xl border border-[#F3C6D6] bg-white px-3.5 py-2 text-[14px] text-ink-sub">
             로그아웃
           </button>
         </form>
@@ -71,16 +71,16 @@ export function Dashboard({ stats }: { stats: AdminStats }) {
         <div className="flex h-36 items-end gap-1.5">
           {stats.daily.map((d) => (
             <div key={d.date} className="flex h-full flex-1 flex-col items-center justify-end gap-1" title={`${d.date} ${won(d.revenue)}`}>
-              <span className="text-[10.5px] text-ink-mute">{d.count || ""}</span>
+              <span className="text-[11.5px] text-ink-mute">{d.count || ""}</span>
               <div
                 className="w-full rounded-t-md bg-point"
                 style={{ height: `${Math.max(d.revenue ? 4 : 1, (d.revenue / maxRevenue) * 100)}%`, opacity: d.revenue ? 1 : 0.25 }}
               />
-              <span className="text-[10.5px] text-ink-sub">{d.date.slice(8)}</span>
+              <span className="text-[11.5px] text-ink-sub">{d.date.slice(8)}</span>
             </div>
           ))}
         </div>
-        <p className="m-0 text-[12px] text-ink-mute">막대 높이는 매출, 위 숫자는 결제 건수예요.</p>
+        <p className="m-0 text-[13px] text-ink-mute">막대 높이는 매출, 위 숫자는 결제 건수예요.</p>
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -114,19 +114,19 @@ export function Dashboard({ stats }: { stats: AdminStats }) {
       <Card title="주문 상태">
         <div className="flex flex-wrap gap-2">
           {(Object.keys(STATUS) as RecentOrder["status"][]).map((s) => (
-            <span key={s} className={`rounded-xl px-3 py-1.5 text-[13px] ${STATUS[s].cls}`}>
+            <span key={s} className={`rounded-xl px-3 py-1.5 text-[14px] ${STATUS[s].cls}`}>
               {STATUS[s].label} {stats.counts[s]}
             </span>
           ))}
         </div>
-        <p className="m-0 text-[12px] text-ink-mute">
+        <p className="m-0 text-[13px] text-ink-mute">
           결제 대기는 결제창을 열고 끝내지 않은 주문이에요. 오래 남아 있어도 정상이에요.
         </p>
       </Card>
 
       <Card title="최근 주문 20건">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] border-collapse text-left text-[13px]">
+          <table className="w-full min-w-[560px] border-collapse text-left text-[14px]">
             <thead>
               <tr className="text-ink-mute">
                 {["주문번호", "상품", "금액", "상태", "결제수단", "구분", "풀이", "시각"].map((h) => (
@@ -143,7 +143,7 @@ export function Dashboard({ stats }: { stats: AdminStats }) {
                   <td className="whitespace-nowrap border-b border-[#FBE3EC] px-2 py-2">{PRODUCTS[o.product].name}</td>
                   <td className="whitespace-nowrap border-b border-[#FBE3EC] px-2 py-2">{won(o.amount)}</td>
                   <td className="whitespace-nowrap border-b border-[#FBE3EC] px-2 py-2">
-                    <span className={`rounded-lg px-2 py-0.5 text-[12px] ${STATUS[o.status].cls}`}>{STATUS[o.status].label}</span>
+                    <span className={`rounded-lg px-2 py-0.5 text-[13px] ${STATUS[o.status].cls}`}>{STATUS[o.status].label}</span>
                   </td>
                   <td className="whitespace-nowrap border-b border-[#FBE3EC] px-2 py-2">{o.method}</td>
                   <td className="whitespace-nowrap border-b border-[#FBE3EC] px-2 py-2">{o.member ? "회원" : "비회원"}</td>
@@ -161,7 +161,7 @@ export function Dashboard({ stats }: { stats: AdminStats }) {
             </tbody>
           </table>
         </div>
-        <p className="m-0 text-[12px] text-ink-mute">
+        <p className="m-0 text-[13px] text-ink-mute">
           주문번호로 환불 요청을 확인할 수 있어요. 결과 링크, 휴대폰 뒷자리, 생년월일 같은 개인정보는 보여주지 않아요.
         </p>
       </Card>

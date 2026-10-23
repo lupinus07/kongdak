@@ -31,14 +31,21 @@ function Waiting({ poll, saju, input }: { poll?: boolean; saju?: Saju; input?: {
           <WaitingSteps />
         </div>
       ) : null}
-      <p className="m-0 text-ink-sub">
-        {poll ? "풀이를 정성껏 쓰는 중이에요. 1분 정도 걸릴 수 있어요." : "풀이를 만들고 있어요. 30초~1분 정도 걸릴 수 있어요…"}
-        <br />
-        결제는 끝났으니 나가도 괜찮아요.
-      </p>
-      <Suspense fallback={null}>
-        <ResultLinkBox product="love" waiting />
-      </Suspense>
+      {/* poll이 아닐 때는 아직 풀이가 새로 만들어지는 중인지, 저장된 풀이를 읽는 중인지 모른다 */}
+      {poll ? (
+        <>
+          <p className="m-0 text-ink-sub">
+            풀이를 정성껏 쓰는 중이에요. 1분 정도 걸릴 수 있어요.
+            <br />
+            결제는 끝났으니 나가도 괜찮아요.
+          </p>
+          <Suspense fallback={null}>
+            <ResultLinkBox product="love" waiting />
+          </Suspense>
+        </>
+      ) : (
+        <p className="m-0 text-ink-sub">풀이를 불러오고 있어요…</p>
+      )}
       {/* 진행 상황은 위에 두고, 기다리는 동안 읽을 수 있게 결제 전 미리보기와 같은 내용을 아래에 보여준다 */}
       {saju && (
         <Sec className="text-left">
@@ -106,7 +113,7 @@ async function LoveResultBody({
     <main className="flex flex-1 flex-col gap-3.5 px-[18px] pb-8 pt-2">
       <ResultLinkBox product="love" orderCode={order.orderCode} />
       <section className="flex flex-col gap-2 rounded-[30px] bg-brand px-5 py-6 text-white">
-        <span className="text-[13px] text-[#FFE3EC]">{birthLabel(input.birth ?? "", input.calendar, input.time)}</span>
+        <span className="text-[14px] text-[#FFE3EC]">{birthLabel(input.birth ?? "", input.calendar, input.time)}</span>
         <h1 className="m-0 font-title text-[28px] font-normal leading-[1.3]">
           {r.hero.title.map((line, i) => (
             <span key={i} className="block">
@@ -114,10 +121,10 @@ async function LoveResultBody({
             </span>
           ))}
         </h1>
-        <p className="m-0 text-[14.5px] leading-[1.7] text-[#FFE3EC]">{r.hero.summary}</p>
+        <p className="m-0 text-[15px] leading-[1.7] text-[#FFE3EC]">{r.hero.summary}</p>
         <div className="mt-1 flex flex-wrap gap-1.5">
           {r.hero.tags.map((tag) => (
-            <span key={tag} className="rounded-xl bg-white/20 px-[11px] py-[5px] text-[12.5px]">
+            <span key={tag} className="rounded-xl bg-white/20 px-[11px] py-[5px] text-[13.5px]">
               #{tag}
             </span>
           ))}
@@ -127,7 +134,7 @@ async function LoveResultBody({
       {r.worryAnswer && input.worry && (
         <Sec className="bg-[#FFF7D6]">
           <Chap className="text-[#8A5A00]">내 고민 풀이</Chap>
-          <p className="m-0 rounded-2xl bg-white/70 px-3.5 py-3 text-[13.5px] leading-[1.65] text-[#6B4A2B]">“{input.worry}”</p>
+          <p className="m-0 rounded-2xl bg-white/70 px-3.5 py-3 text-[14.5px] leading-[1.65] text-[#6B4A2B]">“{input.worry}”</p>
           <H className="text-[#5C3D00]">{r.worryAnswer.quote}</H>
           {r.worryAnswer.paragraphs.map((p, i) => (
             <P key={i} className="text-[#6B4A2B]">
@@ -192,11 +199,11 @@ async function LoveResultBody({
         <div className="grid grid-cols-2 gap-2">
           <div className="flex flex-col gap-1 rounded-[18px] bg-[#E3F4E1] p-3">
             <b className="font-title text-[15px] font-normal text-[#2B6B2A]">잘 맞아요</b>
-            <span className="text-[13px] leading-[1.55] text-[#335C32]">{r.match.good}</span>
+            <span className="text-[14px] leading-[1.55] text-[#335C32]">{r.match.good}</span>
           </div>
           <div className="flex flex-col gap-1 rounded-[18px] bg-[#FFF1DE] p-3">
             <b className="font-title text-[15px] font-normal text-[#8A4B00]">한 번 더 생각해요</b>
-            <span className="text-[13px] leading-[1.55] text-[#6B4A2B]">{r.match.careful}</span>
+            <span className="text-[14px] leading-[1.55] text-[#6B4A2B]">{r.match.careful}</span>
           </div>
         </div>
       </Sec>
@@ -214,7 +221,7 @@ async function LoveResultBody({
       <Sec>
         <Chap>CHAPTER 7</Chap>
         <H>다가오는 1년 연애 흐름</H>
-        <P className="!text-[13px] text-[#5E3F4C]">절기 기준 · 하트가 많을수록 인연 기운이 강한 달</P>
+        <P className="!text-[14px] text-[#5E3F4C]">절기 기준 · 하트가 많을수록 인연 기운이 강한 달</P>
         <div className="grid grid-cols-3 gap-1.5">
           {r.flow.months.map((m) => {
             const mark = m.caution ? "⚠" : "♥".repeat(Math.min(Math.max(m.hearts, 0), 3));
@@ -224,7 +231,7 @@ async function LoveResultBody({
                 <b className="font-title text-[15px] font-normal text-ink">
                   {m.month} {mark}
                 </b>
-                <span className="text-[11.5px] leading-[1.4] text-[#6B4A58]">{m.text}</span>
+                <span className="text-[12.5px] leading-[1.4] text-[#6B4A58]">{m.text}</span>
               </div>
             );
           })}
@@ -248,7 +255,7 @@ async function LoveResultBody({
             ["행운의 시간", r.closing.luckyTime],
           ].map(([label, value]) => (
             <div key={label} className="flex flex-col items-center gap-1 rounded-2xl bg-white px-1.5 py-2.5">
-              <span className="text-[11.5px] text-ink-sub">{label}</span>
+              <span className="text-[12.5px] text-ink-sub">{label}</span>
               <b className="font-title text-sm font-normal">{value}</b>
             </div>
           ))}

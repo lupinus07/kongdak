@@ -6,7 +6,7 @@ import type { OrderDraft } from "@/lib/order-draft";
 import type { Product } from "@/lib/products";
 
 export const inputCls =
-  "h-[46px] w-full min-w-0 rounded-[14px] border-none bg-bg px-3.5 text-[15px] text-ink placeholder:text-[#B88A9C]";
+  "h-[46px] w-full min-w-0 rounded-[14px] border-none bg-bg px-3.5 text-[15px] text-ink placeholder:text-[#9A7C8A]";
 export const labelCls = "font-title text-base text-brand";
 
 export function BenefitBox({ items, title = "결과에서 이런 걸 알려드려요" }: { items: string[]; title?: string }) {
@@ -14,7 +14,7 @@ export function BenefitBox({ items, title = "결과에서 이런 걸 알려드�
     <div className="grid grid-cols-2 gap-x-2.5 gap-y-1.5 rounded-2xl border-[1.5px] border-dashed border-[#F3B6CB] px-3.5 py-3">
       <span className="col-span-2 text-xs text-[#A61E4D]">{title}</span>
       {items.map((b) => (
-        <span key={b} className="flex items-center gap-1.5 text-[13px] text-[#6B4A58]">
+        <span key={b} className="flex items-center gap-1.5 text-[14px] text-[#6B4A58]">
           <Check />
           {b}
         </span>

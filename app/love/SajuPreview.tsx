@@ -41,7 +41,7 @@ function Blurred({ lines = 2 }: { lines?: number }) {
 
 function Lock() {
   return (
-    <span className="rounded-xl bg-[#FFF0F5] px-2.5 py-[3px] text-[11.5px] text-brand">🔒 결제 후 열려요</span>
+    <span className="rounded-xl bg-[#FFF0F5] px-2.5 py-[3px] text-[12.5px] text-brand">🔒 결제 후 열려요</span>
   );
 }
 
@@ -80,7 +80,7 @@ export function SajuPreview({
       <Sec>
         <div className="flex items-center justify-between">
           <Chap>CHAPTER 1</Chap>
-          <span className="rounded-xl bg-badge px-2.5 py-[3px] text-[11.5px] text-ink">무료 미리보기</span>
+          <span className="rounded-xl bg-badge px-2.5 py-[3px] text-[12.5px] text-ink">무료 미리보기</span>
         </div>
         <H>나의 사주 원국</H>
         <SajuChart saju={saju} />
@@ -108,7 +108,7 @@ export function SajuPreview({
         <div aria-hidden="true" className="pointer-events-none grid select-none grid-cols-3 gap-1.5 blur-[4px]">
           {["♥♥", "♥", "♥♥♥", "♥", "♥♥", "♥"].map((mark, i) => (
             <div key={i} className="flex flex-col gap-1 rounded-2xl bg-[#FFF8FA] px-2 py-2.5 text-xs text-[#5E3F4C]">
-              <b className="font-title text-[13px] font-normal text-brand">{mark}</b>
+              <b className="font-title text-[14px] font-normal text-brand">{mark}</b>
               이 달의 연애 흐름
             </div>
           ))}

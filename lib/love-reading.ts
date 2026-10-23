@@ -5,7 +5,13 @@ import type { LoveFacts } from "./saju-facts";
 
 /** 나의 연애운 AI 풀이. 서버에서만 호출한다(ANTHROPIC_API_KEY는 클라이언트에 노출 금지). */
 
-export const LOVE_MODEL = "claude-opus-5-5";
+/**
+ * 테스트 기간 동안 true: 싼 모델·낮은 effort·짧은 분량으로 비용을 줄인다.
+ * 정식 오픈 때 false로 바꾸면 Opus + 풍부한 분량으로 돌아온다.
+ */
+export const TEST_LITE = true;
+
+export const LOVE_MODEL = TEST_LITE ? "claude-sonnet-5-5" : "claude-opus-5-5";
 
 const Chapter = z.object({
   /** 챕터 제목 아래 따옴표 문구. 예: 마음이 가면 숨기지 못해요 */
@@ -101,15 +107,22 @@ const SYSTEM = `당신은 20대를 위한 연애 서비스 "콩닥"의 사주 �
 
 문장의 분량은 샘플 수준을 기준으로 해요. 챕터마다 너무 짧거나 길지 않게, 휴대폰 화면에서 읽기 좋은 길이로 써요.`;
 
+/** 테스트용 간결 모드: 구조(스키마)는 그대로 두고 문단 수·길이만 줄인다. */
+const LITE_NOTE = `
+
+## 간결 모드 (테스트)
+- 위 문단 수 지침보다 우선해요. 각 챕터의 paragraphs는 1개, 문단은 2~3문장으로 짧게 써요. bullets·caution·match 문장도 한 문장씩만 써요.
+- 말투 규칙과 사실 규칙, JSON 구조는 그대로 지켜요. 1년 흐름 달별 text는 짧게 쓰되 12개 모두 채워요.`;
+
 /** 사주 사실 → 풀이. 실패하면 예외를 던진다(호출하는 쪽에서 재시도·환불 안내). */
 export async function generateLoveReading(facts: LoveFacts, model: string = LOVE_MODEL) {
   const client = new Anthropic();
   const response = await client.messages.parse({
     model,
-    max_tokens: 16000,
-    system: SYSTEM,
+    max_tokens: TEST_LITE ? 8000 : 16000,
+    system: TEST_LITE ? SYSTEM + LITE_NOTE : SYSTEM,
     messages: [{ role: "user", content: JSON.stringify(facts) }],
-    output_config: { effort: "medium", format: zodOutputFormat(LoveReadingSchema) },
+    output_config: { effort: TEST_LITE ? "low" : "medium", format: zodOutputFormat(LoveReadingSchema) },
   });
   if (response.stop_reason === "refusal" || !response.parsed_output) {
     throw new Error(`풀이 생성 실패 (stop_reason: ${response.stop_reason})`);

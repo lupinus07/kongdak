@@ -95,7 +95,7 @@ async function ShareBody({ params }: Props) {
       </div>
 
       <div className="flex flex-col items-center gap-1.5 text-center">
-        <span className="text-[13px] text-ink-sub">
+        <span className="text-[14px] text-ink-sub">
           {card.ko} · {share.reversed ? "역방향" : "정방향"}
         </span>
         {r && <h1 className="m-0 font-title text-2xl font-normal leading-snug">{r.headline}</h1>}

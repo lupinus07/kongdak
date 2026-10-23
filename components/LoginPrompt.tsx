@@ -11,7 +11,7 @@ export function LoginPrompt({ onDone }: { onDone?: () => void }) {
       </svg>
       <div className="flex flex-col gap-1">
         <p className="m-0 font-title text-xl">로그인하고 내 기록 보기</p>
-        <p className="m-0 text-[13px] leading-normal text-ink-sub">
+        <p className="m-0 text-[14px] leading-normal text-ink-sub">
           결제 내역과 지난 풀이를
           <br />
           언제든 다시 볼 수 있어요

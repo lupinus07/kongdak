@@ -45,7 +45,7 @@ export default function CompatResultPage() {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[13px] text-ink-sub">콩닥지수</span>
+              <span className="text-[14px] text-ink-sub">콩닥지수</span>
               <span className="font-title text-[52px] leading-none text-brand">
                 87<span className="text-2xl">%</span>
               </span>

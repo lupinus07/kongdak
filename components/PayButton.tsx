@@ -33,7 +33,7 @@ export function PayButton({ label, product, draft }: { label: string; product: P
         className="flex h-[58px] w-full items-center justify-center gap-2 rounded-[29px] bg-brand font-title text-[19px] text-white shadow-[0_10px_22px_rgba(194,37,92,0.28)]"
       >
         {label}
-        <span className="rounded-xl bg-white/20 px-2.5 py-[3px] font-body text-[13px]">{PRODUCTS[product].price.toLocaleString()}원</span>
+        <span className="rounded-xl bg-white/20 px-2.5 py-[3px] font-body text-[14px]">{PRODUCTS[product].price.toLocaleString()}원</span>
       </button>
       {open && <LoginSheet product={product} draft={draft} onClose={() => setOpen(false)} />}
     </>

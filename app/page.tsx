@@ -41,7 +41,7 @@ export default function Home() {
           href="/tarot"
           className="relative flex h-[226px] flex-col gap-2 overflow-hidden rounded-[30px] bg-gradient-to-br from-[#E64980] to-brand p-5 pt-[22px] text-white no-underline shadow-[0_14px_28px_rgba(194,37,92,0.30)]"
         >
-          <span className="self-start rounded-xl bg-badge px-[11px] py-[5px] text-[12.5px] text-[#5C3D00]">
+          <span className="self-start rounded-xl bg-badge px-[11px] py-[5px] text-[13.5px] text-[#5C3D00]">
             오늘 1장 무료 · 가입 없이
           </span>
           <span className="max-w-[190px] font-title text-[26px] leading-tight">
@@ -49,7 +49,7 @@ export default function Home() {
             <br />
             고민 물어보기
           </span>
-          <span className="max-w-[180px] text-[13px] leading-normal text-[#FFE3EC]">
+          <span className="max-w-[180px] text-[14px] leading-normal text-[#FFE3EC]">
             짝사랑 · 속마음 · 재회
             <br />
             고백 타이밍까지
@@ -74,7 +74,7 @@ export default function Home() {
           <Link href="/compat" className={miniCard}>
             <CoupleSmall />
             <span className="font-title text-xl">둘의 궁합</span>
-            <span className="text-[13px] leading-snug text-ink-sub">
+            <span className="text-[14px] leading-snug text-ink-sub">
               우리 둘,
               <br />
               얼마나 잘 맞을까?
@@ -84,7 +84,7 @@ export default function Home() {
           <Link href="/love" className={miniCard}>
             <SoloSparkle />
             <span className="font-title text-xl">나의 연애운</span>
-            <span className="text-[13px] leading-snug text-ink-sub">
+            <span className="text-[14px] leading-snug text-ink-sub">
               올해 내 연애,
               <br />
               어떻게 흘러갈까?

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ANONYMOUS, loadTossPayments, type TossPaymentsWidgets } from "@tosspayments/tosspayments-sdk";
 import { BackHeader } from "@/components/BackHeader";
 import { BusinessFooter } from "@/components/BusinessFooter";
-import { BenefitBox, inputCls } from "@/components/form";
+import { BenefitBox } from "@/components/form";
 import { draftSummary, loadOrderDraft, saveOrderDraft, type OrderDraft } from "@/lib/order-draft";
 import { PRODUCTS } from "@/lib/products";
 import { createClient } from "@/lib/supabase/client";
@@ -119,40 +119,39 @@ export function PaymentClient() {
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="font-title text-lg">{product.name}</span>
-                  <span className="truncate text-[13px] text-ink-sub">{draftSummary(draft)}</span>
+                  <span className="truncate text-[14px] text-ink-sub">{draftSummary(draft)}</span>
                 </div>
                 <span className="font-title text-[22px] text-brand">{product.price.toLocaleString()}원</span>
               </div>
               <BenefitBox items={product.benefits} title="이런 내용을 볼 수 있어요" />
             </section>
 
-            {guest && (
-              <section className="flex flex-col gap-2 rounded-[26px] bg-white p-[18px]">
-                <label htmlFor="phone4" className="font-title text-base text-brand">
-                  휴대폰 번호 뒷자리 4자리
-                </label>
-                <input
-                  id="phone4"
-                  value={phoneLast4}
-                  onChange={(e) => setPhoneLast4(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                  inputMode="numeric"
-                  autoComplete="off"
-                  placeholder="예) 1234"
-                  className={inputCls}
-                />
-                <p className="m-0 text-xs leading-relaxed text-ink-sub">
-                  로그인 없이 결제할 수 있어요. 결과 링크를 잃어버렸을 때 주문번호와 함께 다시 찾는 데 써요.
-                </p>
-                <button type="button" onClick={loginFirst} className="self-start p-0 text-[13px] text-brand underline">
-                  카카오 로그인하고 내 기록에 저장하기
-                </button>
-              </section>
-            )}
-
             <section className="flex flex-col gap-2.5 rounded-[26px] bg-white p-[18px]">
               <span className="font-title text-base">결제 수단</span>
               <div id="payment-method" className="-mx-2" />
-              <label className="mt-1 flex items-start gap-2 text-[13px] leading-snug text-[#6B4A58]">
+              {guest && (
+                <div className="flex flex-col gap-2 rounded-[20px] bg-[#FFF0F5] p-3.5">
+                  <label htmlFor="phone4" className="font-title text-base text-brand">
+                    휴대폰 번호 뒷자리 4자리
+                  </label>
+                  <input
+                    id="phone4"
+                    value={phoneLast4}
+                    onChange={(e) => setPhoneLast4(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    placeholder="예) 1234"
+                    className="h-[50px] w-full min-w-0 rounded-[14px] border-2 border-[#4A2B38] bg-white px-3.5 text-[16px] text-ink outline-none placeholder:text-[#9A7C8A] focus:border-brand focus:ring-2 focus:ring-[#FF6B9A]/40"
+                  />
+                  <p className="m-0 text-xs leading-relaxed text-ink-sub">
+                    로그인 없이 결제할 수 있어요. 결과 링크를 잃어버렸을 때 주문번호와 함께 다시 찾는 데 써요.
+                  </p>
+                  <button type="button" onClick={loginFirst} className="self-start p-0 text-[14px] text-brand underline">
+                    카카오 로그인하고 내 기록에 저장하기
+                  </button>
+                </div>
+              )}
+              <label className="mt-1 flex items-start gap-2 text-[14px] leading-snug text-[#6B4A58]">
                 <input
                   type="checkbox"
                   checked={agreed}

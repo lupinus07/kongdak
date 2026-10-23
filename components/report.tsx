@@ -27,12 +27,12 @@ export function H({ children, className = "text-ink" }: { children: ReactNode; c
 }
 
 export function P({ children, className = "text-[#5E3F4C]" }: { children: ReactNode; className?: string }) {
-  return <p className={`m-0 text-[14.5px] leading-[1.75] ${className}`}>{children}</p>;
+  return <p className={`m-0 text-[15px] leading-[1.75] ${className}`}>{children}</p>;
 }
 
 export function Li({ children, dot = "#FF6B9A" }: { children: ReactNode; dot?: string }) {
   return (
-    <div className="flex items-start gap-2.5 text-[14.5px] leading-[1.7] text-[#5E3F4C]">
+    <div className="flex items-start gap-2.5 text-[15px] leading-[1.7] text-[#5E3F4C]">
       <span className="mt-[9px] size-2 shrink-0 rounded-full" style={{ background: dot }} />
       <span>{children}</span>
     </div>
@@ -40,7 +40,7 @@ export function Li({ children, dot = "#FF6B9A" }: { children: ReactNode; dot?: s
 }
 
 export function Disclaimer({ children }: { children: ReactNode }) {
-  return <p className="m-0 text-center text-[11.5px] leading-relaxed text-[#8C6A78]">{children}</p>;
+  return <p className="m-0 text-center text-[12.5px] leading-relaxed text-[#8C6A78]">{children}</p>;
 }
 
 /** 풀이 본문이 들어올 자리를 보여주는 회색 줄. AI 풀이를 붙이기 전까지 레이아웃 확인용으로 쓴다. */

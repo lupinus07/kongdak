@@ -145,12 +145,12 @@ function TodayCard({ draw }: { draw: DailyDraw }) {
           <b className="font-title text-xl font-normal">
             {card.ko} · {draw.reversed ? "역방향" : "정방향"}
           </b>
-          <span className="text-[13px] text-ink-sub">
+          <span className="text-[14px] text-ink-sub">
             {topicLabel} · {TAROT_TOPIC_QUESTIONS[draw.topic]}
           </span>
         </div>
       </Link>
-      <p className="m-0 text-center text-[13px] text-ink-sub">오늘의 무료 카드는 하루 한 장이에요. 내일 또 만나요</p>
+      <p className="m-0 text-center text-[14px] text-ink-sub">오늘의 무료 카드는 하루 한 장이에요. 내일 또 만나요</p>
       <Link
         href={drawResultHref(draw)}
         className="mt-auto flex h-[58px] items-center justify-center gap-2 rounded-[29px] bg-brand font-title text-[19px] text-white no-underline shadow-[0_10px_22px_rgba(194,37,92,0.28)]"

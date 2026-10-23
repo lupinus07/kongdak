@@ -40,7 +40,7 @@ function Orders({ orders }: { orders: MyOrder[] }) {
               <span className="font-title text-base text-brand">{o.amount.toLocaleString()}원</span>
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[13px] text-ink-sub">
+              <span className="text-[14px] text-ink-sub">
                 {formatDate(o.paidAt)} 결제{methodName(o.method) && ` · ${methodName(o.method)}`}
               </span>
               {o.status === "DONE" ? (
@@ -76,7 +76,7 @@ function Readings({ orders }: { orders: MyOrder[] }) {
               <span className="font-title text-base">{o.product === "love" ? "나의 연애운" : "둘의 궁합"}</span>
               {o.opened ? <Badge tone="gray">다시 보기 ›</Badge> : <Badge tone="yellow">열어보기 ›</Badge>}
             </div>
-            <span className="text-[13px] text-ink-sub">{o.summary}</span>
+            <span className="text-[14px] text-ink-sub">{o.summary}</span>
             <span className="text-xs text-ink-mute">{formatDate(o.paidAt)}</span>
           </Link>
         ))}

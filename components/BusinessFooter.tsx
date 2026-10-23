@@ -17,7 +17,7 @@ export function BusinessFooter() {
   return (
     <footer className="flex flex-col items-center gap-3 px-5 pb-5 pt-2 text-center">
       <details className="group w-full">
-        <summary className="mx-auto flex w-fit cursor-pointer list-none items-center gap-1 rounded-[14px] border border-[#F3C6D6] bg-white px-3.5 py-2 text-[13px] text-ink-sub [&::-webkit-details-marker]:hidden">
+        <summary className="mx-auto flex w-fit cursor-pointer list-none items-center gap-1 rounded-[14px] border border-[#F3C6D6] bg-white px-3.5 py-2 text-[14px] text-ink-sub [&::-webkit-details-marker]:hidden">
           {BUSINESS.name} 사업자 정보
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" className="transition-transform group-open:rotate-180">
             <path d="M6 9l6 6 6-6" />
@@ -42,7 +42,7 @@ export function BusinessFooter() {
           <a href={`mailto:${BUSINESS.email}`} className="text-ink-sub no-underline">문의하기</a>
         )}
       </nav>
-      <p className="m-0 text-[11px] text-ink-mute">© 콩닥 by {BUSINESS.name}</p>
+      <p className="m-0 text-[12px] text-ink-mute">© 콩닥 by {BUSINESS.name}</p>
     </footer>
   );
 }

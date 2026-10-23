@@ -6,12 +6,16 @@
   --color-brand-dark: #a61e4d;
   --color-point: #ff6b9a;
   --color-ink: #4a2b38;
-  --color-ink-sub: #7a5566;
-  --color-ink-mute: #9c7a88;
+  --color-ink-sub: #6a4556;
+  --color-ink-mute: #7d5e6d;
   --color-badge: #ffd43b;
   --font-title: var(--font-jua), sans-serif;
   --font-hanja: var(--font-serif-kr), serif;
   --font-body: var(--font-gowun), "Apple SD Gothic Neo", sans-serif;
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.90625rem;
+  --text-sm--line-height: 1.55;
 }
 
 body {

@@ -7,7 +7,7 @@ export function LegalPage({ title, intro, children }: { title: string; intro: Re
   return (
     <PhoneFrame>
       <BackHeader title={title} href="/" />
-      <main className="flex flex-1 flex-col gap-3 px-[22px] pb-10 pt-2 text-[14px] leading-[1.75] text-[#5E3F4C]">
+      <main className="flex flex-1 flex-col gap-3 px-[22px] pb-10 pt-2 text-[15px] leading-[1.75] text-[#5E3F4C]">
         <h1 className="m-0 font-title text-[26px] font-normal text-ink">{title}</h1>
         <div className="rounded-[20px] bg-white px-4 py-3.5">{intro}</div>
         {children}
@@ -52,7 +52,7 @@ export function Ul({ items }: { items: ReactNode[] }) {
 /** 표 대신 쓰는 항목 카드 (모바일에서 읽기 쉽게) */
 export function Rows({ rows }: { rows: [string, ReactNode][] }) {
   return (
-    <dl className="m-0 flex flex-col gap-1 rounded-[14px] bg-bg px-3 py-2.5 text-[13px]">
+    <dl className="m-0 flex flex-col gap-1 rounded-[14px] bg-bg px-3 py-2.5 text-[14px]">
       {rows.map(([k, v]) => (
         <div key={k} className="flex gap-2">
           <dt className="w-[78px] shrink-0 break-keep text-ink-mute">{k}</dt>

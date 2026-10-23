@@ -165,7 +165,7 @@ export function ShareSheet({ content, onClose }: { content: ShareContent; onClos
           ))}
         </div>
         <div className="flex h-12 w-full items-center overflow-hidden rounded-[14px] border border-[#F3C6D6]">
-          <span className="min-w-0 flex-1 truncate px-3.5 text-[13px] text-ink-sub">{url}</span>
+          <span className="min-w-0 flex-1 truncate px-3.5 text-[14px] text-ink-sub">{url}</span>
           <button
             type="button"
             onClick={copy}

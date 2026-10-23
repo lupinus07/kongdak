@@ -204,7 +204,7 @@ export function ResultClient() {
             <span className="rounded-lg bg-brand px-2 py-[3px] text-xs text-white">
               {reversed ? "역방향" : "정방향"}
             </span>
-            <span className="text-[13px] text-ink-sub">
+            <span className="text-[14px] text-ink-sub">
               {card.ko} · {card.numeral}
             </span>
           </div>
@@ -262,7 +262,7 @@ export function ResultClient() {
       </Link>
 
       <div className="mt-auto flex flex-col gap-2.5">
-        <p className="m-0 text-center text-[13px] text-ink-sub">오늘의 무료 카드를 뽑았어요 · 내일 또 만나요</p>
+        <p className="m-0 text-center text-[14px] text-ink-sub">오늘의 무료 카드를 뽑았어요 · 내일 또 만나요</p>
         <p className="m-0 text-center text-xs text-ink-mute">재미와 참고를 위한 콘텐츠예요</p>
         <div className="flex gap-2.5">
           <button
@@ -313,7 +313,7 @@ export function ResultClient() {
           />
           {inKakao ? (
             <>
-              <p className="m-0 text-center text-[13px] text-white/80">크롬·사파리에서 열면 바로 저장할 수 있어요</p>
+              <p className="m-0 text-center text-[14px] text-white/80">크롬·사파리에서 열면 바로 저장할 수 있어요</p>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -333,7 +333,7 @@ export function ResultClient() {
           ) : (
             <>
               {IN_APP_BROWSER.test(navigator.userAgent) && (
-                <p className="m-0 text-center text-[13px] text-white/80">
+                <p className="m-0 text-center text-[14px] text-white/80">
                   저장이 안 되면 오른쪽 위 메뉴에서 &lsquo;다른 브라우저로 열기&rsquo;를 눌러 주세요
                 </p>
               )}

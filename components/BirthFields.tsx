@@ -53,7 +53,7 @@ export function BirthTimeSelect({
       aria-label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`${inputCls} ${value === "" ? "text-[#B88A9C]" : ""}`}
+      className={`${inputCls} ${value === "" ? "text-[#9A7C8A]" : ""}`}
     >
       <option value="">모름</option>
       {SHIJIN.map((t, i) => (
