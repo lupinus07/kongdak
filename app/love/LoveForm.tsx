@@ -91,7 +91,6 @@ export function LoveForm() {
         product="love"
         draft={draft}
         payLabel="내 연애운 보기"
-        sticky
         action={
           <button
             type="button"

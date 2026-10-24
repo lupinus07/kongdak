@@ -6,7 +6,6 @@ import { MenuButton } from "@/components/MenuButton";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { ReviewStrip } from "@/components/ReviewStrip";
 import { BusinessFooter } from "@/components/BusinessFooter";
-import { TabBar } from "@/components/TabBar";
 import { PRODUCTS } from "@/lib/products";
 
 export const metadata = { alternates: { canonical: "/" } };
@@ -20,7 +19,7 @@ const miniCard =
 export default function Home() {
   return (
     <PhoneFrame>
-      <main className="flex flex-1 flex-col gap-3.5 px-5 pb-3 pt-6">
+      <main className="flex flex-1 flex-col gap-3.5 px-5 pb-8 pt-6">
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <Heart />
@@ -104,23 +103,11 @@ export default function Home() {
           </div>
         </div>
 
-        <p className="m-0 text-center text-[13px] text-ink-sub">
-          샘플 풀이 둘러보기{" "}
-          <Link href="/compat/sample" className="text-ink-sub underline">
-            궁합
-          </Link>
-          {" · "}
-          <Link href="/love/sample" className="text-ink-sub underline">
-            연애운
-          </Link>
-        </p>
-
         <Suspense fallback={null}>
           <ReviewStrip />
         </Suspense>
       </main>
       <BusinessFooter />
-      <TabBar />
     </PhoneFrame>
   );
 }

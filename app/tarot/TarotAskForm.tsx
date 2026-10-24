@@ -65,7 +65,7 @@ export function TarotAskForm() {
 
   return (
     <>
-      <Heading title={["요즘 어떤 고민이", "있어요?"]} sub="고민을 고르면 카드가 답해줄게요" />
+      <Heading title="요즘 고민이 뭐예요?" sub="고민을 고르면 카드가 답해줄게요" />
       <div className="grid grid-cols-2 gap-2.5" role="radiogroup" aria-label="고민 선택">
         {TAROT_TOPICS.map((t, i) => {
           const on = t.id === topic;
@@ -98,13 +98,19 @@ export function TarotAskForm() {
   );
 }
 
-function Heading({ title, sub }: { title: [string, string]; sub: string }) {
+function Heading({ title, sub }: { title: string | [string, string]; sub: string }) {
   return (
     <div className="flex flex-col gap-1">
       <h1 className="m-0 font-title text-[28px] font-normal leading-tight">
-        {title[0]}
-        <br />
-        {title[1]}
+        {typeof title === "string" ? (
+          title
+        ) : (
+          <>
+            {title[0]}
+            <br />
+            {title[1]}
+          </>
+        )}
       </h1>
       <p className="m-0 text-[15px] text-ink-sub">{sub}</p>
     </div>
