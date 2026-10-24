@@ -11,9 +11,11 @@ import { PRODUCTS } from "@/lib/products";
 
 export const metadata = { alternates: { canonical: "/" } };
 
-const priceBadge = "mt-auto self-start rounded-[10px] bg-bg px-2.5 py-1 font-title text-sm text-brand";
+const priceBadge = "whitespace-nowrap rounded-[10px] bg-bg px-2 py-1 font-title text-[13px] text-brand";
+const sampleChip =
+  "pointer-events-auto whitespace-nowrap rounded-[10px] border border-brand/30 bg-white px-2 py-1 font-title text-[13px] text-brand no-underline";
 const miniCard =
-  "flex h-[188px] flex-col gap-1.5 rounded-[26px] bg-white p-4 text-ink no-underline shadow-[0_8px_20px_rgba(194,37,92,0.10)]";
+  "relative flex h-[188px] flex-col gap-1.5 rounded-[26px] bg-white p-4 text-ink no-underline shadow-[0_8px_20px_rgba(194,37,92,0.10)]";
 
 export default function Home() {
   return (
@@ -71,7 +73,7 @@ export default function Home() {
         </Link>
 
         <div className="grid grid-cols-2 gap-3">
-          <Link href="/compat" className={miniCard}>
+          <div className={miniCard}>
             <CoupleSmall />
             <span className="font-title text-xl">둘의 궁합</span>
             <span className="text-[14px] leading-snug text-ink-sub">
@@ -79,9 +81,12 @@ export default function Home() {
               <br />
               얼마나 잘 맞을까?
             </span>
-            <span className={priceBadge}>{PRODUCTS.compat.price.toLocaleString()}원</span>
-          </Link>
-          <Link href="/love" className={miniCard}>
+            <div className="pointer-events-none relative z-10 mt-auto flex items-center gap-1">
+              <span className={priceBadge}>{PRODUCTS.compat.price.toLocaleString()}원</span>
+            </div>
+            <Link href="/compat" aria-label="둘의 궁합 시작하기" className="absolute inset-0 rounded-[26px]" />
+          </div>
+          <div className={miniCard}>
             <SoloSparkle />
             <span className="font-title text-xl">나의 연애운</span>
             <span className="text-[14px] leading-snug text-ink-sub">
@@ -89,9 +94,26 @@ export default function Home() {
               <br />
               어떻게 흘러갈까?
             </span>
-            <span className={priceBadge}>{PRODUCTS.love.price.toLocaleString()}원</span>
-          </Link>
+            <div className="pointer-events-none relative z-10 mt-auto flex items-center gap-1">
+              <Link href="/love" className={sampleChip}>
+                무료보기
+              </Link>
+              <span className={priceBadge}>{PRODUCTS.love.price.toLocaleString()}원</span>
+            </div>
+            <Link href="/love" aria-label="나의 연애운 시작하기" className="absolute inset-0 rounded-[26px]" />
+          </div>
         </div>
+
+        <p className="m-0 text-center text-[13px] text-ink-sub">
+          샘플 풀이 둘러보기{" "}
+          <Link href="/compat/sample" className="text-ink-sub underline">
+            궁합
+          </Link>
+          {" · "}
+          <Link href="/love/sample" className="text-ink-sub underline">
+            연애운
+          </Link>
+        </p>
 
         <Suspense fallback={null}>
           <ReviewStrip />
