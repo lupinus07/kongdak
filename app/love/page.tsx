@@ -23,7 +23,6 @@ export default function LovePage() {
               <br />
               어떻게 흘러갈까?
             </h1>
-            <p className="m-0 text-sm text-ink-sub">내 사주로 꼼꼼하게 읽는 연애 흐름</p>
           </div>
           <LoveTitle />
         </div>
