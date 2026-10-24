@@ -78,7 +78,7 @@ export function LoveForm() {
           className={`${inputCls} h-auto resize-none py-3 leading-normal`}
         />
         <p className="m-0 -mt-1 flex justify-between gap-2 text-xs text-ink-sub">
-          <span>적어 주면 내 고민에 맞춘 풀이를 함께 써 드려요. 이름·연락처는 적지 말아 주세요</span>
+          <span>이름·연락처는 적지 말아 주세요</span>
           <span className="shrink-0">
             {worry.length}/{WORRY_MAX}
           </span>
@@ -91,7 +91,6 @@ export function LoveForm() {
         product="love"
         draft={draft}
         payLabel="내 연애운 보기"
-        sticky
         action={
           <button
             type="button"
