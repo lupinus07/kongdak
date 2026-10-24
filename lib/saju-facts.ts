@@ -200,3 +200,168 @@ export function buildLoveFacts(
     months,
   };
 }
+
+// ---------------------------------------------------------
+// 둘의 궁합: 두 원국 사이의 관계
+// ---------------------------------------------------------
+
+/** 천간충 (두 사람 사이의 말·생각 부딪힘을 볼 때 쓴다) */
+const STEM_CLASH = [["甲", "庚"], ["乙", "辛"], ["丙", "壬"], ["丁", "癸"]];
+
+export type CompatPersonInput = SajuInput & { gender: string; label: string };
+
+/** 한 사람의 원국 요약 (궁합 풀이용) */
+function personFacts(saju: Saju, p: CompatPersonInput) {
+  const day = saju.pillars.find((x) => x.key === "day")!;
+  const month = saju.pillars.find((x) => x.key === "month")!;
+  const els = Object.keys(saju.balance) as Element[];
+  const sorted = [...els].sort((a, b) => saju.balance[b] - saju.balance[a]);
+  const tenCount: Record<string, number> = {};
+  for (const x of saju.pillars) {
+    if (x.key !== "day") tenCount[x.ganTen] = (tenCount[x.ganTen] ?? 0) + 1;
+    tenCount[x.zhiTen] = (tenCount[x.zhiTen] ?? 0) + 1;
+  }
+  return {
+    label: p.label,
+    gender: p.gender,
+    birthTimeKnown: p.time !== "",
+    pillars: saju.pillars.map((x) => ({
+      position: POS_KO[x.key] + "주",
+      gan: `${x.gan}(${x.ganRead})`,
+      zhi: `${x.zhi}(${x.zhiRead})`,
+      ganTenGod: x.ganTen,
+      zhiTenGod: x.zhiTen,
+    })),
+    dayMaster: { gan: day.gan, ko: day.ganRead, image: DAY_MASTER_IMAGE[GAN.indexOf(day.gan)], element: EL_KO[day.ganEl] },
+    monthBranch: { zhi: month.zhi, season: SEASON[month.zhi], element: EL_KO[month.zhiEl] },
+    elementCount: Object.fromEntries(els.map((e) => [EL_KO[e], saju.balance[e]])),
+    strongestElements: sorted.filter((e) => saju.balance[e] === saju.balance[sorted[0]]).map((e) => EL_KO[e]),
+    missingElements: els.filter((e) => saju.balance[e] === 0).map((e) => EL_KO[e]),
+    tenGodCount: tenCount,
+  };
+}
+
+/** 내 사주에 없는 오행을 상대 원국의 어떤 글자가 채우는지 */
+export function elementFill(mine: Saju, theirs: Saju) {
+  const missing = (Object.keys(mine.balance) as Element[]).filter((e) => mine.balance[e] === 0);
+  return missing.map((e) => ({
+    element: e,
+    chars: theirs.pillars.flatMap((x) => [x.ganEl === e ? x.gan : "", x.zhiEl === e ? x.zhi : ""]).filter(Boolean),
+  }));
+}
+
+/** 성별 기준 인연의 별이 상대 원국에 몇 개 있는지. 여자는 관성(나를 극하는 오행), 남자는 재성(내가 극하는 오행). */
+function partnerStarIn(mine: Saju, gender: string, theirs: Saju) {
+  const dayEl = mine.dayMaster.element;
+  const el = gender === "남자" ? CONTROLS[dayEl] : (Object.keys(CONTROLS) as Element[]).find((e) => CONTROLS[e] === dayEl)!;
+  return { kind: gender === "남자" ? "재성" : "관성", element: EL_KO[el], countInPartner: theirs.balance[el] };
+}
+
+/** 두 일간 사이의 오행 관계 */
+function dayMasterRelation(a: Saju, b: Saju, la: string, lb: string): string {
+  const [ea, eb] = [a.dayMaster.element, b.dayMaster.element];
+  if (ea === eb) return `같은 오행(${EL_KO[ea]})`;
+  if (GENERATES[ea] === eb) return `${la}의 일간이 ${lb}의 일간을 생함 (${EL_KO[ea]} → ${EL_KO[eb]})`;
+  if (GENERATES[eb] === ea) return `${lb}의 일간이 ${la}의 일간을 생함 (${EL_KO[eb]} → ${EL_KO[ea]})`;
+  if (CONTROLS[ea] === eb) return `${la}의 일간이 ${lb}의 일간을 극함 (${EL_KO[ea]} → ${EL_KO[eb]})`;
+  return `${lb}의 일간이 ${la}의 일간을 극함 (${EL_KO[eb]} → ${EL_KO[ea]})`;
+}
+
+type Rel = { text: string; kind: "combine" | "clash" | "half" | "stemCombine" | "stemClash"; dayDay?: boolean };
+
+/** 두 원국 사이의 합·충·반합 (한 사람 안의 관계는 빼고, 서로 다른 사람의 글자끼리만 본다) */
+function crossRelations(a: Saju, b: Saju, la: string, lb: string): { rels: Rel[]; tripleDone: string[] } {
+  const rels: Rel[] = [];
+  for (const x of a.pillars) {
+    for (const y of b.pillars) {
+      const where = `${la} ${POS_KO[x.key]}지 ${x.zhi} · ${lb} ${POS_KO[y.key]}지 ${y.zhi}`;
+      const dayDay = x.key === "day" && y.key === "day";
+      if (isPair(CLASH, x.zhi, y.zhi)) rels.push({ text: `${where} 충`, kind: "clash", dayDay });
+      if (isPair(COMBINE, x.zhi, y.zhi)) rels.push({ text: `${where} 육합`, kind: "combine", dayDay });
+      for (const t of TRIPLES) {
+        if (x.zhi !== y.zhi && t.zhi.includes(x.zhi) && t.zhi.includes(y.zhi)) {
+          rels.push({ text: `${where} ${t.name} 반합`, kind: "half", dayDay });
+        }
+      }
+      const stems = `${la} ${POS_KO[x.key]}간 ${x.gan} · ${lb} ${POS_KO[y.key]}간 ${y.gan}`;
+      if (isPair(STEM_COMBINE, x.gan, y.gan)) rels.push({ text: `${stems} 합`, kind: "stemCombine", dayDay });
+      if (isPair(STEM_CLASH, x.gan, y.gan)) rels.push({ text: `${stems} 충`, kind: "stemClash", dayDay });
+    }
+  }
+  const ha = new Set(a.pillars.map((p) => p.zhi));
+  const hb = new Set(b.pillars.map((p) => p.zhi));
+  const tripleDone = TRIPLES.filter((t) => {
+    const all = [...t.zhi];
+    return all.every((c) => ha.has(c) || hb.has(c)) && !all.every((c) => ha.has(c)) && !all.every((c) => hb.has(c));
+  }).map((t) => `${t.zhi} ${t.name} (두 사주를 합치면 완성)`);
+  return { rels, tripleDone };
+}
+
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+
+/**
+ * 콩닥지수(궁합 점수). AI가 아니라 규칙으로 계산해서, 같은 두 사람은 언제 봐도 같은 점수가 나온다.
+ * 서로 없는 오행을 채워 주는지, 일간·일지(부부궁)의 관계, 그 밖의 합·충을 더하고 뺀다. 60~97 사이.
+ */
+function compatScore(a: Saju, b: Saju, rels: Rel[], tripleDone: number): number {
+  let s = 64;
+  const fill = [...elementFill(a, b), ...elementFill(b, a)].filter((f) => f.chars.length > 0).length;
+  s += Math.min(fill * 4, 12);
+  const [ea, eb] = [a.dayMaster.element, b.dayMaster.element];
+  if (isPair(STEM_COMBINE, a.dayMaster.gan, b.dayMaster.gan)) s += 7;
+  else if (GENERATES[ea] === eb || GENERATES[eb] === ea) s += 5;
+  else if (ea === eb) s += 3;
+  else s -= 2;
+  const day = rels.filter((r) => r.dayDay);
+  if (day.some((r) => r.kind === "combine")) s += 6;
+  else if (day.some((r) => r.kind === "half")) s += 4;
+  if (day.some((r) => r.kind === "clash")) s -= 6;
+  const other = rels.filter((r) => !r.dayDay);
+  const branch = other.reduce((n, r) => n + (r.kind === "combine" ? 2 : r.kind === "half" ? 1 : r.kind === "clash" ? -2 : 0), 0);
+  s += clamp(branch, -6, 6);
+  const stem = other.reduce((n, r) => n + (r.kind === "stemCombine" ? 2 : r.kind === "stemClash" ? -2 : 0), 0);
+  s += clamp(stem, -4, 4);
+  s += Math.min(tripleDone * 3, 6);
+  return clamp(Math.round(s), 60, 97);
+}
+
+export type CompatFacts = ReturnType<typeof buildCompatFacts>;
+
+/** 둘의 궁합 AI 풀이에 넘기는 사실. a는 주문한 사람(나), b는 상대. */
+export function buildCompatFacts(a: CompatPersonInput, b: CompatPersonInput, relation: string) {
+  const [sa, sb] = [calcSaju(a), calcSaju(b)];
+  const { rels, tripleDone } = crossRelations(sa, sb, a.label, b.label);
+  const fills = (mine: Saju, theirs: Saju) =>
+    elementFill(mine, theirs).map((f) => ({ element: EL_KO[f.element], partnerChars: f.chars }));
+  const dayA = sa.pillars.find((p) => p.key === "day")!;
+  const dayB = sb.pillars.find((p) => p.key === "day")!;
+  const elements = Object.keys(sa.balance) as Element[];
+  const combined = Object.fromEntries(elements.map((e) => [EL_KO[e], sa.balance[e] + sb.balance[e]]));
+  const need = (s: Saju) => {
+    const missing = elements.filter((e) => s.balance[e] === 0);
+    const weakest = [...elements].sort((x, y) => s.balance[x] - s.balance[y])[0];
+    return (missing.length ? missing : [weakest]).map((e) => ({ element: EL_KO[e], lucky: LUCKY[e] }));
+  };
+  return {
+    relation,
+    score: compatScore(sa, sb, rels, tripleDone.length),
+    people: [personFacts(sa, a), personFacts(sb, b)],
+    dayMasters: {
+      relation: dayMasterRelation(sa, sb, a.label, b.label),
+      stemCombine: isPair(STEM_COMBINE, dayA.gan, dayB.gan),
+      [`${a.label}의 일간 기준 ${b.label}의 일간`]: tenGod(dayA.gan, dayB.gan),
+      [`${b.label}의 일간 기준 ${a.label}의 일간`]: tenGod(dayB.gan, dayA.gan),
+    },
+    dayBranches: {
+      [a.label]: `${dayA.zhi}(${dayA.zhiRead})`,
+      [b.label]: `${dayB.zhi}(${dayB.zhiRead})`,
+      relations: rels.filter((r) => r.dayDay && r.kind !== "stemCombine" && r.kind !== "stemClash").map((r) => r.text),
+    },
+    crossRelations: rels.filter((r) => !r.dayDay).map((r) => r.text),
+    triplesAcrossCharts: tripleDone,
+    elementFill: { [a.label]: fills(sa, sb), [b.label]: fills(sb, sa) },
+    partnerStar: { [a.label]: partnerStarIn(sa, a.gender, sb), [b.label]: partnerStarIn(sb, b.gender, sa) },
+    combinedElementCount: combined,
+    luckyCandidates: { [a.label]: need(sa), [b.label]: need(sb) },
+  };
+}
