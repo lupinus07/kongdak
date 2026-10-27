@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useActionState, useCallback, useEffect, useState } from "react";
 import { inputCls, labelCls } from "@/components/form";
 import { createInquiry, type CreateState } from "@/lib/inquiry-actions";
-import { INQUIRY_CATEGORIES, INQUIRY_MAX, type InquiryCategory } from "@/lib/inquiry-shared";
+import { INQUIRY_CATEGORIES, INQUIRY_MAX, PASSWORD_MAX, PASSWORD_MIN, type InquiryCategory } from "@/lib/inquiry-shared";
 
 const PLACEHOLDER: Record<InquiryCategory, string> = {
   환불: "예) 결제했는데 아직 풀이를 열지 않았어요. 환불하고 싶어요.",
@@ -14,23 +14,23 @@ const PLACEHOLDER: Record<InquiryCategory, string> = {
 };
 
 /**
- * 1:1 문의 입력. 답변은 문의번호 + 휴대폰 뒷자리로 사이트에서 확인한다(연락처를 따로 받지 않는다).
+ * 문의 남기기. 글은 비밀글로 올라가고, 정한 비밀번호(로그인했으면 '내 문의')로 답변을 확인한다. 연락처는 받지 않는다.
  * 접수 화면에서 '다른 문의 남기기'를 누르면 key를 바꿔 입력 상태를 처음부터 다시 만든다
  * (페이지를 옮겨 다녀와도 이전 상태가 남아 있어서, 새로고침 없이 다시 쓸 수 있게).
  */
-export function InquiryForm() {
+export function InquiryForm({ loggedIn }: { loggedIn: boolean }) {
   const [round, setRound] = useState(0);
   const again = useCallback(() => setRound((n) => n + 1), []);
-  return <InquiryFormRound key={round} onAgain={again} />;
+  return <InquiryFormRound key={round} onAgain={again} loggedIn={loggedIn} />;
 }
 
-function InquiryFormRound({ onAgain }: { onAgain: () => void }) {
+function InquiryFormRound({ onAgain, loggedIn }: { onAgain: () => void; loggedIn: boolean }) {
   const [state, action, pending] = useActionState<CreateState, FormData>(createInquiry, {});
   const [category, setCategory] = useState<InquiryCategory>("환불");
   // 폼을 보내면 입력칸이 비워지므로, 오류가 나도 다시 쓰지 않게 값을 직접 들고 있는다
   const [content, setContent] = useState("");
   const [orderCode, setOrderCode] = useState("");
-  const [last4, setLast4] = useState("");
+  const [password, setPassword] = useState("");
 
   // 접수한 뒤 다른 화면으로 나가면(화면은 숨겨진 채 남아 있다) 다음에 들어올 때 새 입력란이 보이게 한다.
   // 보내기 전에는 이 효과가 아무것도 하지 않는다.
@@ -47,24 +47,22 @@ function InquiryFormRound({ onAgain }: { onAgain: () => void }) {
         <p className="m-0 text-[15px] leading-relaxed text-ink-sub">
           확인하는 대로 답변을 남길게요.
           <br />
-          아래 문의번호를 꼭 저장해 두세요.
-        </p>
-        <div className="flex flex-col items-center gap-1 rounded-2xl bg-bg px-6 py-3">
-          <span className="text-[13px] text-ink-sub">문의번호</span>
-          <b className="font-title text-[26px] font-normal tracking-[2px] text-ink">{state.code}</b>
-        </div>
-        <p className="m-0 text-[13.5px] leading-relaxed text-ink-sub">
-          답변은 ‘답변 확인하기’에서 문의번호와 휴대폰 뒷자리로 볼 수 있어요.
+          {loggedIn ? "‘내 문의’에서 답변을 볼 수 있어요." : "답변은 게시판에서 내 글을 누르고 비밀번호를 넣으면 볼 수 있어요."}
         </p>
         <Link
-          href="/inquiry/check"
+          href={`/inquiry/${state.code}`}
           className="mt-1 flex h-[52px] w-full items-center justify-center rounded-[26px] bg-brand font-title text-[17px] text-white no-underline"
         >
-          답변 확인하기
+          내 문의 보기
         </Link>
-        <button type="button" onClick={onAgain} className="text-[14px] text-brand">
-          다른 문의 남기기 ›
-        </button>
+        <div className="flex gap-4">
+          <Link href="/inquiry" className="text-[14px] text-brand no-underline">
+            목록으로 ›
+          </Link>
+          <button type="button" onClick={onAgain} className="text-[14px] text-brand">
+            다른 문의 남기기 ›
+          </button>
+        </div>
       </section>
     );
   }
@@ -128,22 +126,27 @@ function InquiryFormRound({ onAgain }: { onAgain: () => void }) {
           className={`${inputCls} uppercase placeholder:normal-case`}
         />
 
-        <label htmlFor="phoneLast4" className={labelCls}>
-          휴대폰 번호 뒷자리
+        <label htmlFor="password" className={labelCls}>
+          비밀번호 {loggedIn && <span className="text-sm text-ink-sub">(선택)</span>}
         </label>
         <input
-          id="phoneLast4"
-          name="phoneLast4"
-          value={last4}
-          onChange={(e) => setLast4(e.target.value.replace(/\D/g, ""))}
-          inputMode="numeric"
-          pattern="[0-9]{4}"
-          maxLength={4}
-          required
-          placeholder="숫자 4자리"
+          id="password"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          required={!loggedIn}
+          minLength={PASSWORD_MIN}
+          maxLength={PASSWORD_MAX}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder={`${PASSWORD_MIN}~${PASSWORD_MAX}자`}
           className={inputCls}
         />
-        <p className="m-0 -mt-1.5 text-xs text-ink-sub">답변을 확인할 때 문의번호와 함께 써요.</p>
+        <p className="m-0 -mt-1.5 text-xs text-ink-sub">
+          {loggedIn
+            ? "로그인한 상태라 ‘내 문의’에서 비밀번호 없이 볼 수 있어요."
+            : "글은 비밀글로 올라가요. 답변을 볼 때 이 비밀번호가 필요해요."}
+        </p>
 
         {/* 봇 차단용 숨은 칸 */}
         <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
@@ -157,8 +160,8 @@ function InquiryFormRound({ onAgain }: { onAgain: () => void }) {
       >
         {pending ? "보내는 중…" : "문의 남기기"}
       </button>
-      <Link href="/inquiry/check" className="text-center text-[14px] text-brand no-underline">
-        이미 문의했다면 답변 확인하기 ›
+      <Link href="/inquiry" className="text-center text-[14px] text-brand no-underline">
+        문의 목록 보기 ›
       </Link>
     </form>
   );

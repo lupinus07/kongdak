@@ -4,13 +4,24 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { ADMIN_COOKIE, verifyAdminToken } from "@/lib/admin-auth";
-import { ANSWER_MAX, INQUIRY_CATEGORIES, INQUIRY_MAX, INQUIRY_MIN, type InquiryCategory } from "@/lib/inquiry-shared";
+import { toDetail } from "@/lib/inquiries";
+import { hashPassword, verifyPassword } from "@/lib/inquiry-password";
+import {
+  ANSWER_MAX,
+  INQUIRY_CATEGORIES,
+  INQUIRY_MAX,
+  INQUIRY_MIN,
+  PASSWORD_MAX,
+  PASSWORD_MIN,
+  type InquiryCategory,
+  type InquiryDetail,
+} from "@/lib/inquiry-shared";
 import { SITE_URL } from "@/lib/site";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { notifyTelegram } from "@/lib/telegram";
 
-/** 1:1 문의: 받기(누구나) · 답변 확인(문의번호 + 뒷자리) · 답하기(관리자). 모두 서버에서만 DB를 읽고 쓴다. */
+/** 문의 게시판: 남기기(누구나) · 비밀번호로 열기 · 답하기(관리자). 모두 서버에서만 DB를 읽고 쓴다. */
 
 export type CreateState = { code?: string; error?: string };
 
@@ -23,15 +34,28 @@ export async function createInquiry(_prev: CreateState, formData: FormData): Pro
   const content = String(formData.get("content") ?? "").trim();
   if (content.length < INQUIRY_MIN) return { error: `내용을 ${INQUIRY_MIN}자 이상 적어 주세요.` };
   if (content.length > INQUIRY_MAX) return { error: `내용은 ${INQUIRY_MAX}자까지 적을 수 있어요.` };
-  const phoneLast4 = String(formData.get("phoneLast4") ?? "");
-  if (!/^\d{4}$/.test(phoneLast4)) return { error: "휴대폰 번호 뒷자리 4자리를 입력해 주세요." };
   const rawOrder = String(formData.get("orderCode") ?? "").trim().toUpperCase();
   if (rawOrder && !/^[0-9A-F]{8}$/.test(rawOrder)) return { error: "주문번호는 영문·숫자 8자리예요. 모르면 비워 두세요." };
 
   const { data: auth } = await (await createClient()).auth.getUser();
+  const userId = auth.user?.id ?? null;
+  // 로그인했으면 '내 문의'에서 바로 보니 비밀번호는 선택, 아니면 필수
+  const password = String(formData.get("password") ?? "");
+  if (password || !userId) {
+    if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) {
+      return { error: `비밀번호를 ${PASSWORD_MIN}~${PASSWORD_MAX}자로 정해 주세요.` };
+    }
+  }
+
   const { data, error } = await createAdminClient()
     .from("inquiries")
-    .insert({ user_id: auth.user?.id ?? null, category, content, phone_last4: phoneLast4, order_code: rawOrder || null })
+    .insert({
+      user_id: userId,
+      category,
+      content,
+      order_code: rawOrder || null,
+      password_hash: password ? hashPassword(password) : null,
+    })
     .select("code")
     .single();
   if (error || !data) {
@@ -40,47 +64,50 @@ export async function createInquiry(_prev: CreateState, formData: FormData): Pro
   }
   // 응답을 늦추지 않게 알림은 응답 뒤에 보낸다. 내용은 싣지 않는다.
   after(() => notifyTelegram(`콩닥 새 문의가 왔어요 [${category}]\n${SITE_URL}/admin`));
+  revalidatePath("/inquiry");
   return { code: data.code };
 }
 
-export type FoundInquiry = {
-  code: string;
-  category: string;
-  content: string;
-  createdAt: string;
-  answer: string | null;
-  answeredAt: string | null;
-};
-export type FindState = { inquiry?: FoundInquiry; error?: string };
+export type OpenState = { inquiry?: InquiryDetail; error?: string };
 
-export async function findInquiry(_prev: FindState, formData: FormData): Promise<FindState> {
-  const code = String(formData.get("code") ?? "").trim().toUpperCase();
-  const phoneLast4 = String(formData.get("phoneLast4") ?? "");
-  if (!/^[0-9A-F]{8}$/.test(code) || !/^\d{4}$/.test(phoneLast4)) {
-    return { error: "문의번호 8자리와 휴대폰 뒷자리 4자리를 확인해 주세요." };
-  }
-  const { data } = await createAdminClient()
+const MAX_FAILS = 5;
+const LOCK_MS = 10 * 60 * 1000;
+
+/**
+ * 비밀번호로 문의 열기. 목록에 문의번호가 공개되므로 한 문의에 5번 틀리면 10분 동안 잠근다.
+ * 예전 문의(비밀번호 칸이 생기기 전)는 휴대폰 뒷자리로 연다.
+ */
+export async function openInquiry(code: string, _prev: OpenState, formData: FormData): Promise<OpenState> {
+  const password = String(formData.get("password") ?? "");
+  if (!/^[0-9A-F]{8}$/.test(code) || !password) return { error: "비밀번호를 입력해 주세요." };
+  const admin = createAdminClient();
+  const { data: row } = await admin
     .from("inquiries")
-    .select("code, category, content, created_at, answer, answered_at")
+    .select("id, code, category, content, created_at, answer, answered_at, password_hash, phone_last4, failed_attempts, locked_until")
     .eq("code", code)
-    .eq("phone_last4", phoneLast4)
-    .order("created_at", { ascending: false })
-    .limit(1)
     .maybeSingle();
-  if (!data) {
-    await new Promise((r) => setTimeout(r, 800)); // 번호를 연달아 대입하기 어렵게 늦춘다
-    return { error: "문의를 찾지 못했어요. 문의번호와 뒷자리를 다시 확인해 주세요." };
+  if (!row) return { error: "문의를 찾지 못했어요." };
+  if (row.locked_until && new Date(row.locked_until).getTime() > Date.now()) {
+    return { error: "비밀번호를 여러 번 틀려서 잠시 잠겼어요. 10분 뒤에 다시 시도해 주세요." };
   }
-  return {
-    inquiry: {
-      code: data.code,
-      category: data.category,
-      content: data.content,
-      createdAt: data.created_at,
-      answer: data.answer,
-      answeredAt: data.answered_at,
-    },
-  };
+
+  const ok = row.password_hash ? verifyPassword(password, row.password_hash) : !!row.phone_last4 && row.phone_last4 === password;
+  if (!ok) {
+    const fails = (row.failed_attempts ?? 0) + 1;
+    const lock = fails >= MAX_FAILS;
+    await admin
+      .from("inquiries")
+      .update({ failed_attempts: lock ? 0 : fails, locked_until: lock ? new Date(Date.now() + LOCK_MS).toISOString() : null })
+      .eq("id", row.id);
+    await new Promise((r) => setTimeout(r, 600)); // 연달아 대입하기 어렵게 늦춘다
+    return {
+      error: lock
+        ? "비밀번호를 여러 번 틀려서 잠시 잠겼어요. 10분 뒤에 다시 시도해 주세요."
+        : `비밀번호가 맞지 않아요. (${MAX_FAILS - fails}번 더 틀리면 10분 동안 잠겨요)`,
+    };
+  }
+  if (row.failed_attempts) await admin.from("inquiries").update({ failed_attempts: 0 }).eq("id", row.id);
+  return { inquiry: toDetail(row) };
 }
 
 export type AnswerState = { ok?: boolean; error?: string };
@@ -98,5 +125,6 @@ export async function answerInquiry(_prev: AnswerState, formData: FormData): Pro
     .eq("id", id);
   if (error) return { error: "답변을 저장하지 못했어요." };
   revalidatePath("/admin");
+  revalidatePath("/inquiry");
   return { ok: true };
 }
