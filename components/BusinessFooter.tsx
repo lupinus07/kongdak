@@ -7,7 +7,7 @@ export function BusinessFooter() {
     ["상호", BUSINESS.name],
     ["대표", BUSINESS.ceo],
     ["사업자등록번호", BUSINESS.registrationNumber],
-    ["통신판매업 신고", BUSINESS.mailOrderNumber],
+    ["통신판매업 신고번호", BUSINESS.mailOrderNumber],
     ["주소", BUSINESS.address],
     ["전화", BUSINESS.phone],
     ["이메일", BUSINESS.email],
