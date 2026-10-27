@@ -1,10 +1,11 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { after } from "next/server";
 import { ADMIN_COOKIE, verifyAdminToken } from "@/lib/admin-auth";
 import { currentUserId, toDetail } from "@/lib/inquiries";
+import { INQUIRIES_TAG } from "@/lib/inquiry-list-cache";
 import { hashPassword, verifyPassword } from "@/lib/inquiry-password";
 import {
   ANSWER_MAX,
@@ -62,6 +63,7 @@ export async function createInquiry(_prev: CreateState, formData: FormData): Pro
   }
   // 응답을 늦추지 않게 알림은 응답 뒤에 보낸다. 내용은 싣지 않는다.
   after(() => notifyTelegram(`콩닥 새 문의가 왔어요 [${category}]\n${SITE_URL}/admin`));
+  updateTag(INQUIRIES_TAG); // 미리 만든 첫 쪽 목록을 바로 새로 만든다
   revalidatePath("/inquiry");
   return { code: data.code };
 }
@@ -122,6 +124,7 @@ export async function answerInquiry(_prev: AnswerState, formData: FormData): Pro
     .update({ answer, answered_at: new Date().toISOString() })
     .eq("id", id);
   if (error) return { error: "답변을 저장하지 못했어요." };
+  updateTag(INQUIRIES_TAG); // 목록의 '답변 완료' 표시를 바로 바꾼다
   revalidatePath("/admin");
   revalidatePath("/inquiry");
   return { ok: true };

@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
+import { loadFirstPage } from "@/lib/inquiry-list-cache";
 import { pageMetadata } from "@/lib/site";
-import { BoardClient } from "./BoardClient";
+import { BoardClient, BoardView } from "./BoardClient";
 
 export const metadata = pageMetadata({
   title: "문의 게시판",
@@ -11,8 +12,9 @@ export const metadata = pageMetadata({
   path: "/inquiry",
 });
 
-/** 화면 틀은 미리 만들어 두고, 목록은 브라우저가 바로 읽어 온다(BoardClient). */
-export default function InquiryBoardPage() {
+/** 첫 쪽 목록까지 미리 만들어 두고(열자마자 보이게), 다른 탭·쪽과 '내 글' 표시는 브라우저가 바로 읽어 온다(BoardClient). */
+export default async function InquiryBoardPage() {
+  const initial = await loadFirstPage();
   return (
     <PhoneFrame>
       <BackHeader title="문의 게시판" />
@@ -29,9 +31,9 @@ export default function InquiryBoardPage() {
             문의하기
           </Link>
         </div>
-        {/* 주소의 ?tab=·?page=를 읽어서 Suspense가 필요하다 */}
-        <Suspense fallback={<p className="m-0 rounded-[22px] bg-white py-10 text-center text-[14.5px] text-ink-sub">불러오는 중…</p>}>
-          <BoardClient />
+        {/* 주소의 ?tab=·?page=를 읽어서 Suspense가 필요하다. 기다리는 동안에도 미리 만든 첫 쪽 목록을 그대로 보여준다. */}
+        <Suspense fallback={<BoardView mineOnly={false} page={1} data={initial} />}>
+          <BoardClient initial={initial} />
         </Suspense>
       </main>
     </PhoneFrame>
