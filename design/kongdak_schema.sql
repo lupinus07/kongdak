@@ -237,8 +237,8 @@ alter table public.reviews enable row level security;
 
 
 -- ---------------------------------------------------------
--- 9. 1:1 문의 (inquiries) — 문의하기에서 받고 관리자 화면에서 답함
---    문의한 사람은 문의번호(code) + 휴대폰 뒷자리로 답변을 확인
+-- 9. 1:1 문의 (inquiries) — 문의 게시판에서 받고 관리자 화면에서 답함
+--    목록은 종류·답변 상태·날짜만 공개, 내용은 비밀번호(또는 로그인한 본인)로만 연다
 --    클라이언트 읽기·쓰기 정책 없음 → 서버만 읽고 쓴다
 -- ---------------------------------------------------------
 create table public.inquiries (
@@ -246,11 +246,14 @@ create table public.inquiries (
   user_id         uuid references public.profiles (id) on delete set null,  -- 로그인한 채로 문의했으면 기록
   category        text not null check (category in ('환불', '결제', '풀이 오류', '기타')),
   order_code      text check (order_code ~ '^[0-9A-F]{8}$'),                 -- 관련 주문번호 (선택)
-  phone_last4     text not null check (phone_last4 ~ '^[0-9]{4}$'),         -- 답변 확인용 휴대폰 뒷자리
+  phone_last4     text check (phone_last4 ~ '^[0-9]{4}$'),                 -- 예전 문의용 (지금은 비밀번호 사용)
+  password_hash   text,                       -- 열람 비밀번호 scrypt 해시 (원문은 저장하지 않음)
+  failed_attempts smallint not null default 0,
+  locked_until    timestamptz,                -- 비밀번호 5번 틀리면 10분 잠금
   content         text not null check (char_length(content) between 5 and 1000),
   answer          text check (char_length(answer) <= 2000),
   answered_at     timestamptz,
-  -- 화면에 보여주는 짧은 문의번호. 뒷자리와 함께 답변을 확인할 때 쓴다.
+  -- 화면에 보여주는 짧은 문의번호 (게시판 주소에 쓴다)
   code            text generated always as (upper(substr(replace(id::text, '-', ''), 1, 8))) stored,
   created_at      timestamptz not null default now()
 );
