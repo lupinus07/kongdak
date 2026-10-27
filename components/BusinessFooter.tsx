@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { BUSINESS } from "@/lib/business";
 
-/** 하단 사업자 정보. 눌러서 펼치는 방식이라 화면을 차지하지 않는다 (JS 없이 details로 동작). */
+/** 하단 사업자 정보. 처음부터 펼쳐 두고(결제사 심사·전자상거래법 표시), 눌러서 접을 수 있다 (JS 없이 details로 동작). */
 export function BusinessFooter() {
   const rows = [
     ["상호", BUSINESS.name],
     ["대표", BUSINESS.ceo],
     ["사업자등록번호", BUSINESS.registrationNumber],
-    ["통신판매업 신고", BUSINESS.mailOrderNumber],
+    ["통신판매업 신고번호", BUSINESS.mailOrderNumber],
     ["주소", BUSINESS.address],
     ["전화", BUSINESS.phone],
     ["이메일", BUSINESS.email],
@@ -16,7 +16,7 @@ export function BusinessFooter() {
 
   return (
     <footer className="flex flex-col items-center gap-3 px-5 pb-5 pt-2 text-center">
-      <details className="group w-full">
+      <details open className="group w-full">
         <summary className="mx-auto flex w-fit cursor-pointer list-none items-center gap-1 rounded-[14px] border border-[#F3C6D6] bg-white px-3.5 py-2 text-[14px] text-ink-sub [&::-webkit-details-marker]:hidden">
           {BUSINESS.name} 사업자 정보
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" className="transition-transform group-open:rotate-180">
@@ -38,9 +38,7 @@ export function BusinessFooter() {
         <Link href="/terms" className="text-ink-sub no-underline">이용약관</Link>
         <Link href="/privacy" className="font-bold text-ink no-underline">개인정보처리방침</Link>
         <Link href="/refund" className="text-ink-sub no-underline">환불정책</Link>
-        {BUSINESS.email && (
-          <a href={`mailto:${BUSINESS.email}`} className="text-ink-sub no-underline">문의하기</a>
-        )}
+        <Link href="/inquiry" className="text-ink-sub no-underline">문의하기</Link>
       </nav>
       <p className="m-0 text-[12px] text-ink-mute">© 콩닥 by {BUSINESS.name}</p>
     </footer>
