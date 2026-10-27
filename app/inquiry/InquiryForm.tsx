@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useCallback, useEffect, useState } from "react";
 import { inputCls, labelCls } from "@/components/form";
 import { createInquiry, type CreateState } from "@/lib/inquiry-actions";
 import { INQUIRY_CATEGORIES, INQUIRY_MAX, type InquiryCategory } from "@/lib/inquiry-shared";
@@ -13,14 +13,32 @@ const PLACEHOLDER: Record<InquiryCategory, string> = {
   기타: "궁금한 점을 편하게 적어 주세요.",
 };
 
-/** 1:1 문의 입력. 답변은 문의번호 + 휴대폰 뒷자리로 사이트에서 확인한다(연락처를 따로 받지 않는다). */
+/**
+ * 1:1 문의 입력. 답변은 문의번호 + 휴대폰 뒷자리로 사이트에서 확인한다(연락처를 따로 받지 않는다).
+ * 접수 화면에서 '다른 문의 남기기'를 누르면 key를 바꿔 입력 상태를 처음부터 다시 만든다
+ * (페이지를 옮겨 다녀와도 이전 상태가 남아 있어서, 새로고침 없이 다시 쓸 수 있게).
+ */
 export function InquiryForm() {
+  const [round, setRound] = useState(0);
+  const again = useCallback(() => setRound((n) => n + 1), []);
+  return <InquiryFormRound key={round} onAgain={again} />;
+}
+
+function InquiryFormRound({ onAgain }: { onAgain: () => void }) {
   const [state, action, pending] = useActionState<CreateState, FormData>(createInquiry, {});
   const [category, setCategory] = useState<InquiryCategory>("환불");
   // 폼을 보내면 입력칸이 비워지므로, 오류가 나도 다시 쓰지 않게 값을 직접 들고 있는다
   const [content, setContent] = useState("");
   const [orderCode, setOrderCode] = useState("");
   const [last4, setLast4] = useState("");
+
+  // 접수한 뒤 다른 화면으로 나가면(화면은 숨겨진 채 남아 있다) 다음에 들어올 때 새 입력란이 보이게 한다.
+  // 보내기 전에는 이 효과가 아무것도 하지 않는다.
+  const done = !!state.code;
+  useEffect(() => {
+    if (!done) return;
+    return onAgain;
+  }, [done, onAgain]);
 
   if (state.code) {
     return (
@@ -44,6 +62,9 @@ export function InquiryForm() {
         >
           답변 확인하기
         </Link>
+        <button type="button" onClick={onAgain} className="text-[14px] text-brand">
+          다른 문의 남기기 ›
+        </button>
       </section>
     );
   }
