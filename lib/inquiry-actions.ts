@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { ADMIN_COOKIE, verifyAdminToken } from "@/lib/admin-auth";
-import { toDetail } from "@/lib/inquiries";
+import { currentUserId, toDetail } from "@/lib/inquiries";
 import { hashPassword, verifyPassword } from "@/lib/inquiry-password";
 import {
   ANSWER_MAX,
@@ -18,7 +18,6 @@ import {
 } from "@/lib/inquiry-shared";
 import { SITE_URL } from "@/lib/site";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import { notifyTelegram } from "@/lib/telegram";
 
 /** 문의 게시판: 남기기(누구나) · 비밀번호로 열기 · 답하기(관리자). 모두 서버에서만 DB를 읽고 쓴다. */
@@ -37,8 +36,7 @@ export async function createInquiry(_prev: CreateState, formData: FormData): Pro
   const rawOrder = String(formData.get("orderCode") ?? "").trim().toUpperCase();
   if (rawOrder && !/^[0-9A-F]{8}$/.test(rawOrder)) return { error: "주문번호는 영문·숫자 8자리예요. 모르면 비워 두세요." };
 
-  const { data: auth } = await (await createClient()).auth.getUser();
-  const userId = auth.user?.id ?? null;
+  const userId = await currentUserId();
   // 로그인했으면 '내 문의'에서 바로 보니 비밀번호는 선택, 아니면 필수
   const password = String(formData.get("password") ?? "");
   if (password || !userId) {

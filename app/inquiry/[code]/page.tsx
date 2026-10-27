@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { PhoneFrame } from "@/components/PhoneFrame";
-import { currentUserId, inquiryExists, loadOwnInquiry } from "@/lib/inquiries";
+import { loadInquiryForViewer } from "@/lib/inquiries";
 import { privateMetadata } from "@/lib/site";
 import { InquiryView } from "../InquiryView";
 import { UnlockForm } from "./UnlockForm";
@@ -32,9 +32,9 @@ async function Body({ params }: { params: Promise<{ code: string }> }) {
   const code = (await params).code.toUpperCase();
   if (!/^[0-9A-F]{8}$/.test(code)) return <p className="m-0 text-center text-ink-sub">문의를 찾지 못했어요.</p>;
   // 로그인한 본인 글이면 비밀번호 없이 바로 연다
-  const own = await loadOwnInquiry(code, await currentUserId());
-  if (own) return <InquiryView q={own} />;
-  const meta = await inquiryExists(code);
-  if (!meta) return <p className="m-0 text-center text-ink-sub">문의를 찾지 못했어요.</p>;
-  return <UnlockForm code={code} category={meta.category} date={meta.createdAt.slice(0, 10).replaceAll("-", ".")} />;
+  const found = await loadInquiryForViewer(code);
+  if (!found) return <p className="m-0 text-center text-ink-sub">문의를 찾지 못했어요.</p>;
+  if ("own" in found) return <InquiryView q={found.own} />;
+  const { category, createdAt } = found.locked;
+  return <UnlockForm code={code} category={category} date={createdAt.slice(0, 10).replaceAll("-", ".")} />;
 }
