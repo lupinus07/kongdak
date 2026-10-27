@@ -16,3 +16,7 @@ export type InquiryDetail = {
   answer: string | null;
   answeredAt: string | null;
 };
+
+/** 게시판 한 쪽에 보여주는 글 수 */
+export const PAGE_SIZE = 15;
+export type InquiryListItem = { code: string; category: string; createdAt: string; answered: boolean; mine: boolean };

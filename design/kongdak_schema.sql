@@ -262,3 +262,33 @@ create index inquiries_code_idx on public.inquiries (code);
 create index inquiries_open_idx on public.inquiries (created_at desc) where answered_at is null;
 
 alter table public.inquiries enable row level security;
+
+
+-- 문의 게시판을 브라우저에서 바로 읽는 함수 (표는 잠가 두고, 공개해도 되는 칸만 돌려준다)
+-- 목록: 문의번호·종류·날짜·답변 여부·내 글 여부만. 내용·비밀번호·연락처는 돌려주지 않는다.
+create or replace function public.inquiry_list(p_offset int, p_limit int, p_mine boolean default false)
+returns table (code text, category text, created_at timestamptz, answered boolean, mine boolean)
+language sql stable security definer set search_path = public
+as $$
+  select i.code, i.category, i.created_at, i.answered_at is not null, coalesce(i.user_id = auth.uid(), false)
+  from public.inquiries i
+  where not p_mine or (auth.uid() is not null and i.user_id = auth.uid())
+  order by i.created_at desc
+  offset greatest(p_offset, 0)
+  limit least(greatest(p_limit, 1), 50);
+$$;
+
+-- 글 하나: 로그인한 본인 글이면 내용·답변까지, 아니면 잠금 화면에 쓸 종류·날짜만 (내용은 null).
+create or replace function public.inquiry_view(p_code text)
+returns table (code text, category text, created_at timestamptz, mine boolean, content text, answer text, answered_at timestamptz)
+language sql stable security definer set search_path = public
+as $$
+  select i.code, i.category, i.created_at, own, case when own then i.content end, case when own then i.answer end,
+         case when own then i.answered_at end
+  from public.inquiries i, lateral (select coalesce(i.user_id = auth.uid(), false) as own) o
+  where i.code = upper(p_code)
+  limit 1;
+$$;
+
+grant execute on function public.inquiry_list(int, int, boolean) to anon, authenticated;
+grant execute on function public.inquiry_view(text) to anon, authenticated;
