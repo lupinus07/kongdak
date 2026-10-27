@@ -1,4 +1,4 @@
-import { checkBirthDate } from "./birth";
+import { checkBirthDate, isUnderMinAge, MIN_AGE } from "./birth";
 import type { Product } from "./products";
 
 /** 로그인·결제를 거쳐 돌아와도 입력이 이어지도록 브라우저에 잠깐 보관하는 입력값 */
@@ -25,6 +25,17 @@ export const WORRY_MAX = 200;
 export function isDraftReady(d: OrderDraft): boolean {
   const births = d.product === "compat" ? [d.me.birth, d.you.birth] : [d.birth];
   return births.every((b) => checkBirthDate(b) === "ok");
+}
+
+/**
+ * 만 14세 미만 생년월일이면 안내 문구를, 아니면 null. 화면(결제 버튼·미리보기)과 서버(주문 만들기)가 같이 쓴다.
+ * 궁합은 상대방도 본다(어린이의 생년월일로 궁합을 보지 않게).
+ */
+export function draftAgeError(d: OrderDraft): string | null {
+  if (d.product === "love") {
+    return isUnderMinAge(d.birth, d.calendar) ? `나의 연애운은 만 ${MIN_AGE}세 이상만 볼 수 있어요.` : null;
+  }
+  return isUnderMinAge(d.me.birth) || isUnderMinAge(d.you.birth) ? `둘의 궁합은 두 사람 모두 만 ${MIN_AGE}세 이상일 때 볼 수 있어요.` : null;
 }
 
 /** 주문 입력값 한 줄 요약 (결제 화면·내 기록) */

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { AgeConfirm } from "@/components/AgeConfirm";
 import { CoupleTitle } from "@/components/icons/Characters";
 import { saveOrderDraft, type OrderDraft } from "@/lib/order-draft";
 import { loginWithKakao } from "@/lib/session";
@@ -30,6 +31,8 @@ export function LoginSheet({
 }) {
   const copy = COPY[product];
   const router = useRouter();
+  const [adult, setAdult] = useState(false);
+  const [askedAge, setAskedAge] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -43,6 +46,8 @@ export function LoginSheet({
   }, [onClose]);
 
   function startKakao() {
+    // 만 14세 미만은 회원가입을 받지 않는다 (로그인 없이 결제할 때는 입력한 생년월일로 따로 확인한다)
+    if (!adult) return setAskedAge(true);
     // 카카오 로그인(회원가입) 화면으로 나갔다 돌아와도 입력이 남도록 먼저 보관한다.
     if (draft) saveOrderDraft(draft);
     loginWithKakao("/payment");
@@ -76,6 +81,7 @@ export function LoginSheet({
           </h2>
           <p className="m-0 whitespace-pre-line text-sm leading-normal text-ink-sub">{copy.sub}</p>
         </div>
+        <AgeConfirm checked={adult} onChange={setAdult} needed={askedAge} />
         <button
           type="button"
           onClick={startKakao}

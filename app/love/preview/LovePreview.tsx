@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PayButton } from "@/components/PayButton";
-import { isDraftReady, loadOrderDraft, type LoveDraft } from "@/lib/order-draft";
+import { draftAgeError, isDraftReady, loadOrderDraft, type LoveDraft } from "@/lib/order-draft";
 import { SajuPreview } from "../SajuPreview";
 import type { Situation } from "@/lib/saju-reading";
 
@@ -15,7 +15,7 @@ export function LovePreview() {
     // localStorage는 브라우저에서만 읽을 수 있어서 마운트 뒤에 불러온다
     const saved = loadOrderDraft("love");
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDraft(saved && saved.product === "love" && isDraftReady(saved) ? saved : null);
+    setDraft(saved && saved.product === "love" && isDraftReady(saved) && !draftAgeError(saved) ? saved : null);
   }, []);
 
   if (draft === undefined) return null;
