@@ -234,3 +234,28 @@ create table public.reviews (
 create index reviews_visible_idx on public.reviews (created_at desc) where not hidden;
 
 alter table public.reviews enable row level security;
+
+
+-- ---------------------------------------------------------
+-- 9. 1:1 문의 (inquiries) — 문의하기에서 받고 관리자 화면에서 답함
+--    문의한 사람은 문의번호(code) + 휴대폰 뒷자리로 답변을 확인
+--    클라이언트 읽기·쓰기 정책 없음 → 서버만 읽고 쓴다
+-- ---------------------------------------------------------
+create table public.inquiries (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid references public.profiles (id) on delete set null,  -- 로그인한 채로 문의했으면 기록
+  category        text not null check (category in ('환불', '결제', '풀이 오류', '기타')),
+  order_code      text check (order_code ~ '^[0-9A-F]{8}$'),                 -- 관련 주문번호 (선택)
+  phone_last4     text not null check (phone_last4 ~ '^[0-9]{4}$'),         -- 답변 확인용 휴대폰 뒷자리
+  content         text not null check (char_length(content) between 5 and 1000),
+  answer          text check (char_length(answer) <= 2000),
+  answered_at     timestamptz,
+  -- 화면에 보여주는 짧은 문의번호. 뒷자리와 함께 답변을 확인할 때 쓴다.
+  code            text generated always as (upper(substr(replace(id::text, '-', ''), 1, 8))) stored,
+  created_at      timestamptz not null default now()
+);
+
+create index inquiries_code_idx on public.inquiries (code);
+create index inquiries_open_idx on public.inquiries (created_at desc) where answered_at is null;
+
+alter table public.inquiries enable row level security;

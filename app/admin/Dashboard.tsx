@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { PRODUCTS } from "@/lib/products";
+import type { AdminInquiry } from "@/lib/admin-inquiries";
 import type { AdminStats, RecentOrder } from "@/lib/admin-stats";
+import { AnswerForm } from "./AnswerForm";
 import { logoutAction } from "./actions";
 
 const won = (n: number) => `${n.toLocaleString()}원`;
@@ -39,7 +41,22 @@ function formatAt(iso: string) {
   return `${p(d.getUTCMonth() + 1)}.${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
 }
 
-export function Dashboard({ stats }: { stats: AdminStats }) {
+function InquiryItem({ q }: { q: AdminInquiry }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl bg-[#FFF8FA] p-3.5">
+      <div className="flex flex-wrap items-center gap-2 text-[13.5px]">
+        <span className="rounded-lg bg-[#FFE3EC] px-2 py-0.5 text-brand">{q.category}</span>
+        <span className="font-mono text-ink-sub">문의 {q.code}</span>
+        {q.orderCode && <span className="font-mono text-ink-sub">· 주문 {q.orderCode}</span>}
+        <span className="ml-auto text-ink-mute">{formatAt(q.createdAt)}</span>
+      </div>
+      <p className="m-0 whitespace-pre-wrap text-[14.5px] leading-relaxed text-ink">{q.content}</p>
+      <AnswerForm id={q.id} answer={q.answer} />
+    </div>
+  );
+}
+
+export function Dashboard({ stats, inquiries }: { stats: AdminStats; inquiries: { open: AdminInquiry[]; answered: AdminInquiry[] } }) {
   const maxRevenue = Math.max(1, ...stats.daily.map((d) => d.revenue));
   return (
     <main className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-4 px-4 py-6">
@@ -47,7 +64,7 @@ export function Dashboard({ stats }: { stats: AdminStats }) {
         <div>
           <h1 className="m-0 font-title text-[26px] font-normal text-ink">콩닥 대시보드</h1>
           <p className="m-0 text-[13.5px] text-ink-mute">
-            {formatAt(stats.generatedAt)} 기준 · 보기 전용
+            {formatAt(stats.generatedAt)} 기준
             {stats.truncated && " · 주문이 많아 최근 5,000건만 집계했어요"}
           </p>
         </div>
@@ -57,6 +74,25 @@ export function Dashboard({ stats }: { stats: AdminStats }) {
           </button>
         </form>
       </header>
+
+      <Card title={`문의 · 답변 기다리는 중 ${inquiries.open.length}건`}>
+        {inquiries.open.length ? (
+          inquiries.open.map((q) => <InquiryItem key={q.id} q={q} />)
+        ) : (
+          <p className="m-0 text-[14px] text-ink-mute">새 문의가 없어요.</p>
+        )}
+        {inquiries.answered.length > 0 && (
+          <details>
+            <summary className="cursor-pointer text-[14px] text-ink-sub">최근 답변한 문의 {inquiries.answered.length}건</summary>
+            <div className="mt-2.5 flex flex-col gap-2.5">
+              {inquiries.answered.map((q) => (
+                <InquiryItem key={q.id} q={q} />
+              ))}
+            </div>
+          </details>
+        )}
+        <p className="m-0 text-[13px] text-ink-mute">환불은 주문번호를 아래 최근 주문에서 확인하고, 토스 관리자 화면에서 취소해 주세요.</p>
+      </Card>
 
       <Card title="매출 (결제 완료 기준, 환불 제외)">
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">

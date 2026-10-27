@@ -38,9 +38,7 @@ export function BusinessFooter() {
         <Link href="/terms" className="text-ink-sub no-underline">이용약관</Link>
         <Link href="/privacy" className="font-bold text-ink no-underline">개인정보처리방침</Link>
         <Link href="/refund" className="text-ink-sub no-underline">환불정책</Link>
-        {BUSINESS.email && (
-          <a href={`mailto:${BUSINESS.email}`} className="text-ink-sub no-underline">문의하기</a>
-        )}
+        <Link href="/inquiry" className="text-ink-sub no-underline">문의하기</Link>
       </nav>
       <p className="m-0 text-[12px] text-ink-mute">© 콩닥 by {BUSINESS.name}</p>
     </footer>

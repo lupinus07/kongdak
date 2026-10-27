@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { ADMIN_COOKIE, verifyAdminToken } from "@/lib/admin-auth";
+import { loadAdminInquiries } from "@/lib/admin-inquiries";
 import { loadAdminStats } from "@/lib/admin-stats";
 import { privateMetadata } from "@/lib/site";
 import { Dashboard } from "./Dashboard";
@@ -30,5 +31,6 @@ async function AdminBody() {
       </main>
     );
   }
-  return <Dashboard stats={await loadAdminStats()} />;
+  const [stats, inquiries] = await Promise.all([loadAdminStats(), loadAdminInquiries()]);
+  return <Dashboard stats={stats} inquiries={inquiries} />;
 }
