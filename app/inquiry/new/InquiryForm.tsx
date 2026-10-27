@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useCallback, useEffect, useState } from "react";
 import { inputCls, labelCls } from "@/components/form";
 import { createInquiry, type CreateState } from "@/lib/inquiry-actions";
+import { useSession } from "@/lib/session";
 import { INQUIRY_CATEGORIES, INQUIRY_MAX, PASSWORD_MAX, PASSWORD_MIN, type InquiryCategory } from "@/lib/inquiry-shared";
 
 const PLACEHOLDER: Record<InquiryCategory, string> = {
@@ -18,7 +19,10 @@ const PLACEHOLDER: Record<InquiryCategory, string> = {
  * 접수 화면에서 '다른 문의 남기기'를 누르면 key를 바꿔 입력 상태를 처음부터 다시 만든다
  * (페이지를 옮겨 다녀와도 이전 상태가 남아 있어서, 새로고침 없이 다시 쓸 수 있게).
  */
-export function InquiryForm({ loggedIn }: { loggedIn: boolean }) {
+export function InquiryForm() {
+  // 로그인했으면 비밀번호를 선택으로 바꾼다 (브라우저에서 바로 확인, 서버가 다시 확인한다)
+  const { session } = useSession();
+  const loggedIn = !!session;
   const [round, setRound] = useState(0);
   const again = useCallback(() => setRound((n) => n + 1), []);
   return <InquiryFormRound key={round} onAgain={again} loggedIn={loggedIn} />;
