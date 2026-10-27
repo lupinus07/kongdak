@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { BackHeader } from "@/components/BackHeader";
 import { LoginPrompt } from "@/components/LoginPrompt";
 import { PhoneFrame } from "@/components/PhoneFrame";
-import { currentUserId, listInquiries, type InquiryListItem } from "@/lib/inquiries";
+import { listInquiries, type InquiryListItem } from "@/lib/inquiries";
 import { pageMetadata } from "@/lib/site";
 
 export const metadata = pageMetadata({
@@ -79,8 +79,7 @@ async function Board({ searchParams }: { searchParams: Promise<Search> }) {
   const sp = await searchParams;
   const mineOnly = sp.tab === "mine";
   const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
-  const userId = await currentUserId();
-  const { items, hasNext } = await listInquiries({ page, mineOnly, userId });
+  const { userId, items, hasNext } = await listInquiries({ page, mineOnly });
   const href = (p: number) => `/inquiry?${new URLSearchParams({ ...(mineOnly ? { tab: "mine" } : {}), ...(p > 1 ? { page: String(p) } : {}) })}`;
 
   const tab = (on: boolean) =>
