@@ -13,7 +13,6 @@ import { COMPAT_STEPS, WaitingSteps } from "@/components/WaitingSteps";
 import { birthLabel } from "@/lib/birth";
 import { openCompatReading, type CompatSide } from "@/lib/compat-reading-server";
 import { loadPaidOrder } from "@/lib/orders-server";
-import { loadOrderReview } from "@/lib/reviews";
 import { privateMetadata } from "@/lib/site";
 
 export const metadata = privateMetadata("우리의 궁합");
@@ -88,7 +87,8 @@ async function CompatResultBody({ searchParams }: { searchParams: Promise<{ t?: 
   const { t } = await searchParams;
   const order = await loadPaidOrder(t, "compat");
   if (!order) return <Notice>결제한 풀이를 찾지 못했어요.</Notice>;
-  const result = await openCompatReading(order.id, order.input);
+  // 주문·풀이·후기를 한 번에 읽어 왔으니(loadPaidOrder) 여기서는 DB를 다시 읽지 않는다
+  const result = await openCompatReading(order.id, order.input, order.reading);
   if (!result.ok) {
     return result.reason === "no-birth" ? (
       <Notice>생년월일 정보가 없는 주문이라 궁합을 계산할 수 없어요.</Notice>
@@ -96,7 +96,7 @@ async function CompatResultBody({ searchParams }: { searchParams: Promise<{ t?: 
       <Waiting poll people={[result.me, result.you]} />
     );
   }
-  const myReview = await loadOrderReview(order.id);
+  const myReview = order.review;
 
   return (
     <main className="flex flex-1 flex-col gap-3.5 px-[18px] pb-8 pt-2">

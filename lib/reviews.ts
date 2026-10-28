@@ -47,9 +47,3 @@ export async function loadReviewSummary(): Promise<ReviewSummary> {
     return { count: 0, average: 0, items: [] };
   }
 }
-
-/** 이 주문에 이미 쓴 후기 (결과 화면에서 입력란 대신 보여준다) */
-export async function loadOrderReview(orderId: string): Promise<{ rating: number; comment: string | null } | null> {
-  const { data } = await createAdminClient().from("reviews").select("rating, comment").eq("order_id", orderId).maybeSingle();
-  return data;
-}

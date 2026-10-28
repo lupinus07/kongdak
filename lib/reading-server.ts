@@ -13,12 +13,15 @@ const LOCK_MS = 3 * 60 * 1000;
 
 export async function openStoredReading<T>({
   orderId,
+  row: preloaded,
   schema,
   saju,
   generate,
   label,
 }: {
   orderId: string;
+  /** 주문과 함께 이미 읽어 온 readings 행. 있으면 다시 읽지 않는다(DB 왕복 1번 절약). */
+  row?: { result: unknown; opened_at: string | null } | null;
   /** 저장된 풀이를 읽을 때 쓰는 스키마 */
   schema: z.ZodType<T>;
   /** readings.saju에 함께 남기는 원국 */
@@ -28,7 +31,10 @@ export async function openStoredReading<T>({
   label: string;
 }): Promise<{ ok: true; reading: T } | { ok: false }> {
   const admin = createAdminClient();
-  const { data: row } = await admin.from("readings").select("result, opened_at").eq("order_id", orderId).maybeSingle();
+  const row =
+    preloaded !== undefined
+      ? preloaded
+      : (await admin.from("readings").select("result, opened_at").eq("order_id", orderId).maybeSingle()).data;
 
   const stored = schema.safeParse(row?.result);
   if (stored.success) {
