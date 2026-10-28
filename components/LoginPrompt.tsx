@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { AgeConfirm } from "@/components/AgeConfirm";
 import { loginWithKakao } from "@/lib/session";
 
 /** 비로그인 상태에서 보여주는 로그인 안내 카드 (메뉴, 마이페이지 공용) */
@@ -18,6 +20,8 @@ export function LoginPrompt({
   title?: string;
   desc?: React.ReactNode;
 }) {
+  const [adult, setAdult] = useState(false);
+  const [askedAge, setAskedAge] = useState(false);
   return (
     <div className="flex flex-col items-center gap-3 rounded-3xl bg-bg px-5 py-6 text-center">
       <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true">
@@ -27,9 +31,12 @@ export function LoginPrompt({
         <p className="m-0 font-title text-xl">{title}</p>
         <p className="m-0 text-[14px] leading-normal text-ink-sub">{desc}</p>
       </div>
+      <AgeConfirm checked={adult} onChange={setAdult} needed={askedAge} />
       <button
         type="button"
         onClick={() => {
+          // 만 14세 미만은 회원가입을 받지 않는다
+          if (!adult) return setAskedAge(true);
           onDone?.();
           loginWithKakao(window.location.pathname + window.location.search);
         }}

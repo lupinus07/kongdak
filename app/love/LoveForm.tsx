@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Segmented } from "@/components/Segmented";
 import { BirthDateInput, BirthTimeSelect } from "@/components/BirthFields";
 import { BenefitBox, BottomCta, ChipGroup, inputCls, labelCls } from "@/components/form";
-import { isDraftReady, saveOrderDraft, WORRY_MAX, type OrderDraft } from "@/lib/order-draft";
+import { draftAgeError, isDraftReady, saveOrderDraft, WORRY_MAX, type OrderDraft } from "@/lib/order-draft";
 import { PRODUCTS } from "@/lib/products";
 
 const situations = ["솔로", "썸", "연애 중", "이별 후"] as const;
@@ -33,6 +33,12 @@ export function LoveForm() {
   function onPreview() {
     if (!isDraftReady(draft)) {
       alert("생년월일을 정확히 입력해 주세요.");
+      return;
+    }
+    // 무료 미리보기도 만 14세 이상만 (생년월일로 사주를 계산하기 때문)
+    const ageError = draftAgeError(draft);
+    if (ageError) {
+      alert(ageError);
       return;
     }
     saveOrderDraft(draft);

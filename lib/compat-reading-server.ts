@@ -25,7 +25,11 @@ export type CompatReadingResult =
   | { ok: false; reason: "no-birth" }
   | { ok: false; reason: "pending"; me: CompatSide; you: CompatSide };
 
-export async function openCompatReading(orderId: string, input: CompatInput): Promise<CompatReadingResult> {
+export async function openCompatReading(
+  orderId: string,
+  input: CompatInput,
+  row?: { result: unknown; opened_at: string | null } | null,
+): Promise<CompatReadingResult> {
   const { me, you } = input;
   if (!me?.birth || !you?.birth || checkBirthDate(me.birth) !== "ok" || checkBirthDate(you.birth) !== "ok") {
     return { ok: false, reason: "no-birth" };
@@ -49,6 +53,7 @@ export async function openCompatReading(orderId: string, input: CompatInput): Pr
 
   const res = await openStoredReading({
     orderId,
+    row,
     schema: CompatReadingSchema,
     saju: { me: a.saju, you: b.saju },
     label: "궁합 풀이",

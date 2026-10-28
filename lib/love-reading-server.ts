@@ -13,13 +13,18 @@ export type LoveReadingResult =
   | { ok: false; reason: "no-birth" }
   | { ok: false; reason: "pending"; saju: Saju };
 
-export async function openLoveReading(orderId: string, input: LoveInput): Promise<LoveReadingResult> {
+export async function openLoveReading(
+  orderId: string,
+  input: LoveInput,
+  row?: { result: unknown; opened_at: string | null } | null,
+): Promise<LoveReadingResult> {
   if (!input.birth || checkBirthDate(input.birth) !== "ok") return { ok: false, reason: "no-birth" };
   const sajuInput = { birth: input.birth, calendar: input.calendar ?? "양력", time: input.time ?? "" };
   const saju = calcSaju(sajuInput);
 
   const res = await openStoredReading({
     orderId,
+    row,
     schema: LoveReadingStoredSchema,
     saju,
     label: "연애운 풀이",

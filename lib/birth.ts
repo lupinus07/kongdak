@@ -1,3 +1,5 @@
+import { Lunar } from "lunar-javascript";
+
 /** 12시진. 경계가 :30이다. (결 서비스와 같은 구분) */
 export const SHIJIN = [
   { name: "자시", hanja: "子", range: "23:30~01:29" },
@@ -39,3 +41,31 @@ export function checkBirthDate(value: string): "pending" | "ok" | "invalid" {
   const real = date.getFullYear() === y && date.getMonth() === mo - 1 && date.getDate() === d;
   return real && date.getTime() <= Date.now() ? "ok" : "invalid";
 }
+
+/** 이용할 수 있는 최소 나이(만). 만 14세 미만의 개인정보(생년월일)는 법정대리인 동의 없이 처리하지 않는다. */
+export const MIN_AGE = 14;
+
+/**
+ * 만 나이. 음력 생일은 양력으로 바꿔서 센다. 오늘은 한국 시간 기준.
+ * 날짜가 아직 다 입력되지 않았거나 잘못됐으면 null.
+ */
+export function ageOf(birth: string, calendar = "양력", now = new Date()): number | null {
+  if (checkBirthDate(birth) !== "ok") return null;
+  let [y, m, d] = birth.split(".").map(Number);
+  if (calendar === "음력") {
+    try {
+      const solar = Lunar.fromYmdHms(y, m, d, 12, 0, 0).getSolar();
+      [y, m, d] = [solar.getYear(), solar.getMonth(), solar.getDay()];
+    } catch {
+      return null;
+    }
+  }
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const [ty, tm, td] = [kst.getUTCFullYear(), kst.getUTCMonth() + 1, kst.getUTCDate()];
+  return ty - y - (tm < m || (tm === m && td < d) ? 1 : 0);
+}
+
+export const isUnderMinAge = (birth: string, calendar = "양력", now = new Date()) => {
+  const age = ageOf(birth, calendar, now);
+  return age !== null && age < MIN_AGE;
+};

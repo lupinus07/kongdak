@@ -9,6 +9,7 @@ import { BenefitBox } from "@/components/form";
 import { draftSummary, loadOrderDraft, saveOrderDraft, type OrderDraft } from "@/lib/order-draft";
 import { PRODUCTS } from "@/lib/products";
 import { createClient } from "@/lib/supabase/client";
+import { MIN_AGE } from "@/lib/birth";
 import { loginWithKakao, useSession } from "@/lib/session";
 
 export function PaymentClient() {
@@ -81,6 +82,8 @@ export function PaymentClient() {
   }
 
   function loginFirst() {
+    // 만 14세 미만은 회원가입을 받지 않는다
+    if (!confirm(`만 ${MIN_AGE}세 이상인가요? 만 ${MIN_AGE}세 미만은 가입할 수 없어요.`)) return;
     if (draft) saveOrderDraft(draft);
     loginWithKakao("/payment");
   }
@@ -159,7 +162,7 @@ export function PaymentClient() {
                   className="m-0 mt-px size-5 shrink-0 accent-brand"
                 />
                 <span>
-                  주문 내용을 확인했고 결제에 동의해요. 풀이를 연 뒤에는 서비스 오류가 아니면 환불이 어려워요.
+                  만 {MIN_AGE}세 이상이고, 주문 내용을 확인했고 결제에 동의해요. 풀이를 연 뒤에는 서비스 오류가 아니면 환불이 어려워요.
                 </span>
               </label>
               <p className="m-0 pl-7 text-xs leading-relaxed text-ink-mute">

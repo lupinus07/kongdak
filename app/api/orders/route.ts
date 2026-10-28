@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { isDraftReady, WORRY_MAX, type OrderDraft } from "@/lib/order-draft";
+import { draftAgeError, isDraftReady, WORRY_MAX, type OrderDraft } from "@/lib/order-draft";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,6 +20,9 @@ export async function POST(request: Request) {
   if (!isDraftReady(body!.input!)) {
     return NextResponse.json({ error: "생년월일을 정확히 입력해 주세요." }, { status: 400 });
   }
+  // 만 14세 미만 생년월일은 주문을 만들지 않는다 (화면에서 막아도 저장소를 고쳐 보낼 수 있어서 서버에서 다시 본다)
+  const ageError = draftAgeError(body!.input!);
+  if (ageError) return NextResponse.json({ error: ageError }, { status: 400 });
   const input = body!.input!;
   // 고민은 직접 적는 글이라 길이를 서버에서 한 번 더 자른다
   if (input.product === "love") {

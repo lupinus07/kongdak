@@ -13,7 +13,6 @@ import { SajuChart } from "@/components/SajuChart";
 import { birthLabel } from "@/lib/birth";
 import { openLoveReading } from "@/lib/love-reading-server";
 import { loadPaidOrder } from "@/lib/orders-server";
-import { loadOrderReview } from "@/lib/reviews";
 import type { Saju } from "@/lib/saju";
 import { privateMetadata } from "@/lib/site";
 
@@ -98,7 +97,8 @@ async function LoveResultBody({
   const { t } = await searchParams;
   const order = await loadPaidOrder(t, "love");
   if (!order) return <Notice>결제한 풀이를 찾지 못했어요.</Notice>;
-  const result = await openLoveReading(order.id, order.input);
+  // 주문·풀이·후기를 한 번에 읽어 왔으니(loadPaidOrder) 여기서는 DB를 다시 읽지 않는다
+  const result = await openLoveReading(order.id, order.input, order.reading);
   if (!result.ok) {
     return result.reason === "no-birth" ? (
       <Notice>생년월일 정보가 없는 주문이라 사주를 계산할 수 없어요.</Notice>
@@ -107,7 +107,7 @@ async function LoveResultBody({
     );
   }
   const { saju, reading: r, input } = result;
-  const myReview = await loadOrderReview(order.id);
+  const myReview = order.review;
 
   return (
     <main className="flex flex-1 flex-col gap-3.5 px-[18px] pb-8 pt-2">
